@@ -68,6 +68,10 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="uBlockColection"/>
       </Unit>
+      <Unit>
+        <Filename Value="loggerofdrawer.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

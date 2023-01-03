@@ -764,6 +764,7 @@ object frmGame: TfrmGame
         Font.Name = 'Terminal'
         Font.Pitch = fpFixed
         Font.Quality = fqDraft
+        OnChange = mmCmdChange
         ParentFont = False
         ReadOnly = True
         ScrollBars = ssBoth
@@ -778,7 +779,7 @@ object frmGame: TfrmGame
     Top = 66
     Width = 954
     Align = alTop
-    Caption = '                    h                       p                                                               0                           1                           2                            3                           4                          5                           6                           7                           8                            9                          and: home, c, i, s, l and x, y and z (to move)'
+    Caption = '                    h                       p                                                               0                           1                           2                            3                           4                          5                           6                           7                           8                            9                          and: home, c, i, s, l and x, y and (z or ctrl +z) to move'
     Font.CharSet = ANSI_CHARSET
     Font.Height = -9
     Font.Pitch = fpVariable

@@ -36,6 +36,7 @@ type
     FoCurrentPlaceBlockCollection: TBlockColection;
 
     FoNextDrawer: TAbstractDrawer;
+    FoPrevDrawer: TAbstractDrawer;
 
     procedure updateTargetImagePosition; virtual;
 
@@ -154,6 +155,7 @@ end;
 procedure TAbstractDrawer.setNextDrawer(drawer: TAbstractDrawer);
 begin
   FoNextDrawer := drawer;
+  FoNextDrawer.FoPrevDrawer := self;
 end;
 
 end.

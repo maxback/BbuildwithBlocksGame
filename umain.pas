@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, ComCtrls,
   Buttons, StdCtrls, IniFiles, LCLType, Dos, utypes, uBlockColection,
-  uControlConfig, uAbstractDrawer;
+  uControlConfig, uAbstractDrawer, uLoggerOfDrawer;
 
 const
   STATUSBAR_POSITION_INDEX = 0;
@@ -20,6 +20,7 @@ type
 
 
   { TfrmGame }
+  TMoveActionKind = (makMove, makMoveAfterInsert, makMoveAfterPick);
 
   TfrmGame = class(TForm)
     btnBlock9: TSpeedButton;
@@ -76,18 +77,23 @@ type
     procedure imageBackgroungPlace1MouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure lblShortCutsClick(Sender: TObject);
+    procedure mmCmdChange(Sender: TObject);
     procedure TabSheet1MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure tbZoomChange(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure TimerLimitTimer(Sender: TObject);
   private
+    FoLastMoveKind: TMoveActionKind;
     FbBlocked: Boolean;
 
     FoDrawer: TAbstractDrawer;
+    FoLoggerOfDrawer: TLoggerOfDrawer;
 
     FnTimeRemail: integer;
     FMenuButtonsList: TArrayOfSpeedButton;
+
+    procedure goHome;
     procedure updateTargetImagePosition;
     procedure loadTexts;
     procedure loadPictures;
@@ -188,8 +194,12 @@ end;
 procedure TfrmGame.FormKeyDownPlace1(var Key: Word; Shift: TShiftState);
 var
   direction: TDirection;
+  CtrlPressed: boolean;
+  initZ: integer;
 begin
+  initZ := FoDrawer.FnCurrentPlacePositionZ;
 
+  CtrlPressed := ssCtrl in Shift;
   direction := FoDrawer.FControlPlace1.decodeDirectionByKey(true, Key);
 
   if direction = dirNone then
@@ -197,7 +207,7 @@ begin
 
   case direction of
     dirThirdPlanUp: begin
-      if ssCtrl in Shift then
+      if CtrlPressed then
       begin
         statusMessage('moveThirdPlanUp', 'Moving target to Third Plan Up (-)');
         FoDrawer.FnCurrentPlacePositionZ := FoDrawer.FnCurrentPlacePositionZ - 1;
@@ -243,17 +253,32 @@ begin
 
   if direction <> dirThirdPlanUp then
   begin
+    if CtrlPressed then
+    begin
 
-    if FoDrawer.FoMode = modePut then
-      FoDrawer.FnCurrentPlacePositionZ := FoDrawer.FoCurrentPlaceBlockCollection.findMaxZ(
-        FoDrawer.FnCurrentPlacePositionX, FoDrawer.FnCurrentPlacePositionY, -1).FnZ + 1
+      if FoDrawer.FoMode = modePut then
+        if FoLastMoveKind = makMoveAfterInsert then
+          FoDrawer.FnCurrentPlacePositionZ := initZ - 1
+        else
+          FoDrawer.FnCurrentPlacePositionZ := initZ
+
+
+    end
     else
-      FoDrawer.FnCurrentPlacePositionZ := FoDrawer.FoCurrentPlaceBlockCollection.findMaxZ(
-        FoDrawer.FnCurrentPlacePositionX, FoDrawer.FnCurrentPlacePositionY, 0).FnZ;
+    begin
 
+      if FoDrawer.FoMode = modePut then
+        FoDrawer.FnCurrentPlacePositionZ := FoDrawer.FoCurrentPlaceBlockCollection.findMaxZ(
+          FoDrawer.FnCurrentPlacePositionX, FoDrawer.FnCurrentPlacePositionY, -1).FnZ + 1
+      else
+        FoDrawer.FnCurrentPlacePositionZ := FoDrawer.FoCurrentPlaceBlockCollection.findMaxZ(
+          FoDrawer.FnCurrentPlacePositionX, FoDrawer.FnCurrentPlacePositionY, 0).FnZ;
+
+    end;
 
   end;
 
+  FoLastMoveKind := makMove;
   updateTargetImagePosition;
 
 
@@ -277,6 +302,7 @@ begin
   end;
 
   FoDrawer.putNewBlock(imageTargetPlace1hand);
+  FoLastMoveKind := makMoveAfterInsert;
   updateTargetImagePosition;
 
   //newImage.Picture.Bitmap.SetSize(newImage.Width, newImage.Height);
@@ -292,6 +318,7 @@ begin
   end;
 
  FoDrawer.pickBlock;
+ FoLastMoveKind := makMoveAfterPick;
  updateTargetImagePosition;
 
 
@@ -495,6 +522,9 @@ var
   i: integer;
 begin
   FoDrawer := TAbstractDrawer.Create;
+  FoLoggerOfDrawer := TLoggerOfDrawer.Create;
+  FoLoggerOfDrawer.FoLogger := mmCmd;
+  FoDrawer.setNextDrawer(FoLoggerOfDrawer);
   with FoDrawer do
   begin
     FoCurrentPlaceBlockCollection := TBlockColection.create;
@@ -529,11 +559,18 @@ begin
     FoMode := modePut;
     loadTexts;
     loadPictures;
+
+    btnInsertClick(self);
+    btnSelectBlockClick(btnBlock0);
+    goHome;
+
   end;
 end;
 
 procedure TfrmGame.FormDestroy(Sender: TObject);
 begin
+  FoDrawer.setNextDrawer(nil);
+  FoLoggerOfDrawer.Free;
   FoDrawer.FoCurrentPlaceBlockCollection.Free;
   FoDrawer.FControlPlace1.Free;
   FoDrawer.Free;
@@ -555,9 +592,7 @@ begin
   //home
   else if (key = VK_HOME) then
   begin
-    FoDrawer.FnCurrentPlacePositionX := 0;
-    FoDrawer.FnCurrentPlacePositionY := 0;
-    updateTargetImagePosition;
+    goHome;
   end
   else if key = VK_H then
   begin
@@ -591,6 +626,15 @@ end;
 procedure TfrmGame.lblShortCutsClick(Sender: TObject);
 begin
 
+end;
+
+procedure TfrmGame.mmCmdChange(Sender: TObject);
+begin
+  if mmCmd.Lines.Count = 0 then
+    exit;
+
+  StatusBar.Panels.Items[STATUSBAR_MESSAGES_INDEX].Text :=
+    mmCmd.Lines.Strings[mmCmd.Lines.Count - 1];
 end;
 
 procedure TfrmGame.TabSheet1MouseDown(Sender: TObject; Button: TMouseButton;
@@ -688,6 +732,14 @@ begin
     else if (FnTimeRemail mod 30) = 0 then
       UpdateTimeLimit;
   end;
+end;
+
+procedure TfrmGame.goHome;
+begin
+  FoDrawer.FnCurrentPlacePositionX := 0;
+  FoDrawer.FnCurrentPlacePositionY := 0;
+  updateTargetImagePosition;
+  FoLastMoveKind := makMove;
 end;
 
 end.
