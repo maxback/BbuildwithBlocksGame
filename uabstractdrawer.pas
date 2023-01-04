@@ -40,7 +40,7 @@ type
 
     procedure updateTargetImagePosition; virtual;
 
-    procedure putNewBlock(imageTargetPlace1hand: TImage); virtual;
+    function putNewBlock(imageTargetPlace1hand: TImage): TBlock; virtual;
     procedure pickBlock; virtual;
 
 
@@ -75,9 +75,10 @@ begin
 
 end;
 
-procedure TAbstractDrawer.putNewBlock(imageTargetPlace1hand: TImage);
+function TAbstractDrawer.putNewBlock(imageTargetPlace1hand: TImage): TBlock;
 var
   newImage: TImage;
+
 begin
   if (FnSelectedBlockIndex < 0) or (FnSelectedBlockIndex > High(FBlockSourceFilenames)) then
   begin
@@ -106,10 +107,12 @@ begin
   newImage.Picture.LoadFromFile(FBlockSourceFilenames[FnSelectedBlockIndex]);
   newImage.Update;
 
-  FoCurrentPlaceBlockCollection.add(
+  result :=
     TBlock.create(FnCurrentPlacePositionX, FnCurrentPlacePositionY,
-      FnCurrentPlacePositionZ, newImage,
-      FBlockSourceFilenames[FnSelectedBlockIndex]));
+      FnCurrentPlacePositionZ, FnSelectedBlockIndex, newImage,
+      FBlockSourceFilenames[FnSelectedBlockIndex]);
+
+  FoCurrentPlaceBlockCollection.add(result);
 
   Inc(FnCurrentPlacePositionZ);
 

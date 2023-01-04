@@ -11,7 +11,7 @@ uses
   {$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms, umain, uInventory, utypes, uAbstractDrawer, uControlConfig, 
-uBlockColection, uloggerofdrawer
+uBlockColection, uloggerofdrawer, uBlockMotionEngine, pascalscript
   { you can add units after this };
 
 {$R *.res}

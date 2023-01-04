@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="12"/>
+    <BuildModes Active="Default"/>
+    <Units>
+      <Unit>
+        <Filename Value="arrayExample.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="53"/>
+        <CursorPos X="35" Y="66"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+      </Unit>
+    </Units>
+    <JumpHistory HistoryIndex="17">
+      <Position>
+        <Filename Value="arrayExample.lpr"/>
+        <Caret Line="13" Column="30"/>
+      </Position>
+      <Position>
+        <Filename Value="arrayExample.lpr"/>
+        <Caret Line="14" Column="35" TopLine="3"/>
+      </Position>
+      <Position>
+        <Filename Value="arrayExample.lpr"/>
+        <Caret Line="38" Column="22" TopLine="29"/>
+      </Position>
+      <Position>
+        <Filename Value="arrayExample.lpr"/>
+        <Caret Line="13" Column="23" TopLine="3"/>
+      </Position>
+      <Position>
+        <Filename Value="arrayExample.lpr"/>
+        <Caret Line="27" Column="35" TopLine="17"/>
+      </Position>
+      <Position>
+        <Filename Value="arrayExample.lpr"/>
+        <Caret Line="34" Column="6" TopLine="22"/>
+      </Position>
+      <Position>
+        <Filename Value="arrayExample.lpr"/>
+        <Caret Line="53" TopLine="31"/>
+      </Position>
+      <Position>
+        <Filename Value="arrayExample.lpr"/>
+      </Position>
+      <Position>
+        <Filename Value="arrayExample.lpr"/>
+        <Caret Line="128" TopLine="107"/>
+      </Position>
+      <Position>
+        <Filename Value="arrayExample.lpr"/>
+        <Caret Line="74" Column="49" TopLine="68"/>
+      </Position>
+      <Position>
+        <Filename Value="arrayExample.lpr"/>
+        <Caret Line="58" Column="88" TopLine="44"/>
+      </Position>
+      <Position>
+        <Filename Value="arrayExample.lpr"/>
+        <Caret Line="74" Column="24" TopLine="70"/>
+      </Position>
+      <Position>
+        <Filename Value="arrayExample.lpr"/>
+        <Caret Line="58" Column="49" TopLine="55"/>
+      </Position>
+      <Position>
+        <Filename Value="arrayExample.lpr"/>
+        <Caret Line="79" Column="28" TopLine="72"/>
+      </Position>
+      <Position>
+        <Filename Value="arrayExample.lpr"/>
+        <Caret Line="59" Column="50" TopLine="47"/>
+      </Position>
+      <Position>
+        <Filename Value="arrayExample.lpr"/>
+        <Caret Line="58" Column="49" TopLine="47"/>
+      </Position>
+      <Position>
+        <Filename Value="arrayExample.lpr"/>
+        <Caret Line="61" Column="50" TopLine="47"/>
+      </Position>
+      <Position>
+        <Filename Value="arrayExample.lpr"/>
+        <Caret Line="68" Column="30" TopLine="57"/>
+      </Position>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+</CONFIG>

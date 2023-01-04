@@ -1075,4 +1075,12 @@ object frmGame: TfrmGame
     Left = 120
     Top = 160
   end
+  object PSScript1: TPSScript
+    CompilerOptions = []
+    OnCompile = PSScript1Compile
+    Plugins = <>
+    UsePreProcessor = False
+    Left = 64
+    Top = 272
+  end
 end

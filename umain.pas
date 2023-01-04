@@ -7,7 +7,8 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, ComCtrls,
   Buttons, StdCtrls, IniFiles, LCLType, Dos, utypes, uBlockColection,
-  uControlConfig, uAbstractDrawer, uLoggerOfDrawer;
+  uBlockMotionEngine, uControlConfig, uAbstractDrawer, uLoggerOfDrawer,
+  uPSComponent;
 
 const
   STATUSBAR_POSITION_INDEX = 0;
@@ -61,6 +62,7 @@ type
     panelTools9: TPanel;
     PanelTop: TPanel;
     pgPlaces: TPageControl;
+    PSScript1: TPSScript;
     StatusBar: TStatusBar;
     TabSheet1: TTabSheet;
     tbZoom: TTrackBar;
@@ -78,6 +80,7 @@ type
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure lblShortCutsClick(Sender: TObject);
     procedure mmCmdChange(Sender: TObject);
+    procedure PSScript1Compile(Sender: TPSScript);
     procedure TabSheet1MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure tbZoomChange(Sender: TObject);
@@ -94,12 +97,17 @@ type
     FMenuButtonsList: TArrayOfSpeedButton;
 
     procedure goHome;
+    procedure BlockMotionEngineMove(Sender: TMotionBlockControl; const x,y,z: integer);
+    procedure BlockMotionEnginePut(Sender: TMotionBlockControl; const index: integer);
+    procedure BlockMotionEngineLog(Sender: TMotionBlockControl; const msg: string);
+
     procedure updateTargetImagePosition;
     procedure loadTexts;
     procedure loadPictures;
     procedure FormKeyDownPlace1(var Key: Word; Shift: TShiftState);
     procedure updateSelectedBlock(const index: integer; blocksImageList: TImageList);
-    procedure putNewBlock;
+    procedure initMotion(b: Tblock);
+    procedure putNewBlock(const alowMotion: boolean);
     procedure pickBlock;
     procedure InitTimeLimit;
     procedure UpdateTimeLimit;
@@ -293,7 +301,25 @@ begin
     'Selected block: ' + IntToStr(index);
 end;
 
-procedure TfrmGame.putNewBlock;
+procedure TfrmGame.initMotion(b: Tblock);
+var
+  s: string;
+begin
+  try
+    s := b.FsFileName + '.pas';
+    if FileExists(s) then
+    begin
+      TBlockMotionEngine.insert(b, s, @BlockMotionEngineMove, @BlockMotionEnginePut);
+    end;
+  except
+    on e:Exception do
+      mmCmd.Lines.Add('log: Error inserting motion block: ' + E.message);
+  end;
+end;
+
+procedure TfrmGame.putNewBlock(const alowMotion: boolean);
+var
+  b: Tblock;
 begin
   if FbBlocked then
   begin
@@ -301,12 +327,14 @@ begin
     exit;
   end;
 
-  FoDrawer.putNewBlock(imageTargetPlace1hand);
+  b := FoDrawer.putNewBlock(imageTargetPlace1hand);
+
   FoLastMoveKind := makMoveAfterInsert;
   updateTargetImagePosition;
 
-  //newImage.Picture.Bitmap.SetSize(newImage.Width, newImage.Height);
-  //FoBlockImages.Draw(newImage.Picture.Bitmap.Canvas, 0, 0, 0);
+  if alowMotion then
+    initMotion(b);
+
 end;
 
 procedure TfrmGame.pickBlock;
@@ -525,6 +553,9 @@ begin
   FoLoggerOfDrawer := TLoggerOfDrawer.Create;
   FoLoggerOfDrawer.FoLogger := mmCmd;
   FoDrawer.setNextDrawer(FoLoggerOfDrawer);
+
+  TBlockMotionEngine.setEventLog(@BlockMotionEngineLog);
+
   with FoDrawer do
   begin
     FoCurrentPlaceBlockCollection := TBlockColection.create;
@@ -585,7 +616,7 @@ begin
   if (key = VK_RETURN) or (key = VK_SPACE) then
   begin
     case FoDrawer.FoMode of
-      modePut: putNewBlock;
+      modePut: putNewBlock(true);
       modePick: pickBlock;
     end;
   end
@@ -620,7 +651,7 @@ end;
 procedure TfrmGame.imageBackgroungPlace1MouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  putNewBlock;
+  putNewBlock(true);
 end;
 
 procedure TfrmGame.lblShortCutsClick(Sender: TObject);
@@ -637,10 +668,15 @@ begin
     mmCmd.Lines.Strings[mmCmd.Lines.Count - 1];
 end;
 
+procedure TfrmGame.PSScript1Compile(Sender: TPSScript);
+begin
+
+end;
+
 procedure TfrmGame.TabSheet1MouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  putNewBlock;
+  putNewBlock(true);
 end;
 
 procedure TfrmGame.btnInsertClick(Sender: TObject);
@@ -738,8 +774,46 @@ procedure TfrmGame.goHome;
 begin
   FoDrawer.FnCurrentPlacePositionX := 0;
   FoDrawer.FnCurrentPlacePositionY := 0;
+  FoDrawer.FnCurrentPlacePositionZ := 0;
   updateTargetImagePosition;
   FoLastMoveKind := makMove;
+end;
+
+procedure TfrmGame.BlockMotionEngineMove(Sender: TMotionBlockControl; const x,
+  y, z: integer);
+begin
+  FoDrawer.FnCurrentPlacePositionX := x;
+  FoDrawer.FnCurrentPlacePositionY := y;
+  FoDrawer.FnCurrentPlacePositionZ := z;
+  updateTargetImagePosition;
+  FoLastMoveKind := makMove;
+end;
+
+procedure TfrmGame.BlockMotionEnginePut(Sender: TMotionBlockControl;
+  const index: integer);
+begin
+  try
+    case index of
+      -1: pickBlock;
+      else
+      begin
+        updateSelectedBlock(index,
+          ImageListBlocksMenu);
+
+        putNewBlock(false);
+      end;
+    end;
+
+  except
+    //
+  end;
+end;
+
+procedure TfrmGame.BlockMotionEngineLog(Sender: TMotionBlockControl;
+  const msg: string);
+begin
+  mmCmd.Lines.Add('log: from motion block ID ' + IntToStr(Sender.FnId)
+    + ' => ' + msg);
 end;
 
 end.

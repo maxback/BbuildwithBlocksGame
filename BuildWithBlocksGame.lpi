@@ -26,6 +26,9 @@
     </RunParams>
     <RequiredPackages>
       <Item>
+        <PackageName Value="pascalscript"/>
+      </Item>
+      <Item>
         <PackageName Value="LCL"/>
       </Item>
     </RequiredPackages>
@@ -71,6 +74,11 @@
       <Unit>
         <Filename Value="loggerofdrawer.pas"/>
         <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="ublockmotionengine.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uBlockMotionEngine"/>
       </Unit>
     </Units>
   </ProjectOptions>

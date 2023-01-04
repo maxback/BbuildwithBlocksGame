@@ -17,7 +17,7 @@ type
 
     procedure updateTargetImagePosition; override;
 
-    procedure putNewBlock(imageTargetPlace1hand: TImage); override;
+    function putNewBlock(imageTargetPlace1hand: TImage): TBlock; override;
     procedure pickBlock; override;
 
   end;
@@ -31,7 +31,7 @@ begin
   //FoLogger.Lines.Add('updateTargetImagePosition');
 end;
 
-procedure TLoggerOfDrawer.putNewBlock(imageTargetPlace1hand: TImage);
+function TLoggerOfDrawer.putNewBlock(imageTargetPlace1hand: TImage): TBlock;
 begin
   FoLogger.Lines.Add(Format('putNewBlock at (%d,%d,%d)', [
     FoPrevDrawer.FnCurrentPlacePositionX, FoPrevDrawer.FnCurrentPlacePositionY,

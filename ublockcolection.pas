@@ -36,9 +36,10 @@ type
       FnZ: integer;
       FoImage: TImage;
       FsFileName: string;
+      FnImageIndex: integer;
       function ToString: string;
       constructor create(fromString: string; image: TImage);
-      constructor create(x, y, z: integer; image: TImage; fileName: string);
+      constructor create(x, y, z: integer; imageIndex: integer; image: TImage; fileName: string);
   end;
 
 
@@ -83,7 +84,7 @@ begin
   until (Result <> nil) or (z = -1);
 
   if Result = nil then
-    Result := TBlock.Create(x, y, defaultZ, nil, 'dummy object to return in findMaxZ');
+    Result := TBlock.Create(x, y, defaultZ, -1, nil, 'dummy object to return in findMaxZ');
 
 end;
 
@@ -133,13 +134,14 @@ begin
   end;
 end;
 
-constructor TBlock.create(x, y, z: integer; image: TImage; fileName: string);
+constructor TBlock.create(x, y, z: integer; imageIndex: integer; image: TImage; fileName: string);
 begin
   FnX := x;
   FnY := y;
   FnZ := z;
   FoImage := image;
   FsFileName := fileName;
+  FnImageIndex := imageIndex;
 end;
 
 
