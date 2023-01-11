@@ -19,6 +19,7 @@ type
 
     function putNewBlock(imageTargetPlace1hand: TImage): TBlock; override;
     procedure pickBlock; override;
+	procedure moveBlock(block: TBlock; const effect: string); override;
 
   end;
 
@@ -43,6 +44,15 @@ begin
   FoLogger.Lines.Add(Format('pickBlock at (%d,%d,%d)', [
     FoPrevDrawer.FnCurrentPlacePositionX, FoPrevDrawer.FnCurrentPlacePositionY,
     FoPrevDrawer.FnCurrentPlacePositionZ + 1 ]));
+end;
+
+procedure TLoggerOfDrawer.moveBlock(block: TBlock; const effect: string);
+begin
+  FoLogger.Lines.Add(Format('moveBlock %d at (%d,%d,%d) with effect %s', [
+    block.FnImageIndex,
+    FoPrevDrawer.FnCurrentPlacePositionX, FoPrevDrawer.FnCurrentPlacePositionY,
+    FoPrevDrawer.FnCurrentPlacePositionZ, effect]));
+
 end;
 
 end.

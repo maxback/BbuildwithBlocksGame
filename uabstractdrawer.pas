@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Controls, ComCtrls, ExtCtrls, uBlockColection,
-  uControlConfig;
+  MMSystem, uControlConfig;
 
 type
     TMode = (modePut, modePick);
@@ -42,6 +42,8 @@ type
 
     function putNewBlock(imageTargetPlace1hand: TImage): TBlock; virtual;
     procedure pickBlock; virtual;
+
+    procedure moveBlock(block: TBlock; const effect: string); virtual;
 
 
     procedure setNextDrawer(drawer: TAbstractDrawer);
@@ -89,7 +91,7 @@ begin
   if FoCurrentPlaceBlockCollection.find(FnCurrentPlacePositionX, FnCurrentPlacePositionY,
       FnCurrentPlacePositionZ) <> nil then
   begin
-    raise Exception.Create('Aready exist a block on this position. Pick or move...');
+   raise Exception.Create('Aready exist a block on this position. Pick or move...');
   end;
 
   newImage := TImage.Create(FoCurrentPlaceTabSeet);
@@ -118,6 +120,8 @@ begin
 
   if Assigned(FoNextDrawer) then
     FoNextDrawer.putNewBlock(imageTargetPlace1hand);
+
+  PlaySound('C:\git\BbuildwithBlocksGame\sounds\newblock.wav', 0, SND_ASYNC);
 
 end;
 
@@ -152,6 +156,23 @@ begin
 
   if Assigned(FoNextDrawer) then
     FoNextDrawer.pickBlock;
+
+  PlaySound('C:\git\BbuildwithBlocksGame\sounds\pickblock.wav', 0, SND_ASYNC);
+
+end;
+
+
+procedure TAbstractDrawer.moveBlock(block: TBlock; const effect: string);
+begin
+
+  block.FoImage.Top :=  FoCurrentPlaceImageTarget.Top + (FnCurrentPlacePositionZ * C_OFFSET_Z);
+  block.FoImage.Left := FoCurrentPlaceImageTarget.Left - (FnCurrentPlacePositionZ * C_OFFSET_Z);
+  block.FoImage.Height := FoCurrentPlaceImageTarget.Height;
+  block.FoImage.Width := FoCurrentPlaceImageTarget.Width;
+
+
+  if Assigned(FoNextDrawer) then
+    FoNextDrawer.moveBlock(block, effect);
 
 end;
 

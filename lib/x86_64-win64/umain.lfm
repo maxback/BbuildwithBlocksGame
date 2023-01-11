@@ -15,8 +15,8 @@ object frmGame: TfrmGame
   WindowState = wsMaximized
   object pgPlaces: TPageControl
     Left = 0
-    Height = 419
-    Top = 78
+    Height = 416
+    Top = 81
     Width = 954
     ActivePage = TabSheet1
     Align = alClient
@@ -26,12 +26,12 @@ object frmGame: TfrmGame
     TabPosition = tpRight
     object TabSheet1: TTabSheet
       Caption = 'TabSheet1'
-      ClientHeight = 411
+      ClientHeight = 408
       ClientWidth = 946
       OnMouseDown = TabSheet1MouseDown
       object imageBackgroungPlace1: TImage
         Left = 0
-        Height = 411
+        Height = 408
         Top = 0
         Width = 946
         Align = alClient
@@ -377,7 +377,7 @@ object frmGame: TfrmGame
       end    
       item
         Text = 'Select a block'
-        Width = 100
+        Width = 200
       end    
       item
         Width = 50
@@ -426,7 +426,7 @@ object frmGame: TfrmGame
       ClientWidth = 192
       TabOrder = 0
       object btnInsert: TSpeedButton
-        Left = 16
+        Left = 5
         Height = 53
         Top = 3
         Width = 53
@@ -440,7 +440,7 @@ object frmGame: TfrmGame
         ParentShowHint = False
       end
       object btnPick: TSpeedButton
-        Left = 69
+        Left = 65
         Height = 53
         Top = 3
         Width = 53
@@ -775,18 +775,44 @@ object frmGame: TfrmGame
   end
   object lblShortCuts: TLabel
     Left = 0
-    Height = 12
+    Height = 15
     Top = 66
     Width = 954
     Align = alTop
-    Caption = '                    h                       p                                                               0                           1                           2                            3                           4                          5                           6                           7                           8                            9                          and: home, i,  and (z or ctrl +z) to move'
+    Caption = '           h                  p                                        0                 1                  2                 3                  4                  5                  6                  7                8                   9       . to menu  and: home, i,  and (z or ctrl +z) to move'
     Font.CharSet = ANSI_CHARSET
-    Font.Height = -9
     Font.Pitch = fpVariable
     Font.Quality = fqDraft
     ParentColor = False
     ParentFont = False
     OnClick = lblShortCutsClick
+  end
+  object pnlSelectedBlock: TPanel
+    Left = 559
+    Height = 21
+    Top = 499
+    Width = 34
+    Anchors = [akLeft, akBottom]
+    BevelOuter = bvNone
+    ClientHeight = 21
+    ClientWidth = 34
+    TabOrder = 4
+    object btnSelectedBlock: TSpeedButton
+      Left = 0
+      Height = 21
+      Top = 0
+      Width = 27
+      Align = alLeft
+      Flat = True
+      Images = ImageListBlocksMenu
+      ImageIndex = 0
+      ImageWidth = 27
+      Transparent = False
+      OnClick = btnSelectedBlockClick
+      ShowCaption = False
+      ShowHint = True
+      ParentShowHint = False
+    end
   end
   object ImageList: TImageList
     Height = 80
@@ -1082,5 +1108,60 @@ object frmGame: TfrmGame
     UsePreProcessor = False
     Left = 64
     Top = 272
+  end
+  object pmSelectedBlock: TPopupMenu
+    Images = ImageListBlocksMenu
+    Left = 736
+    Top = 400
+    object miSelectBlock0: TMenuItem
+      Caption = '&0'
+      ImageIndex = 0
+      OnClick = btnSelectBlockClick
+    end
+    object miSelectBlock1: TMenuItem
+      Caption = '&1'
+      ImageIndex = 1
+      OnClick = btnSelectBlockClick
+    end
+    object miSelectBlock2: TMenuItem
+      Caption = '&2'
+      ImageIndex = 2
+      OnClick = btnSelectBlockClick
+    end
+    object miSelectBlock3: TMenuItem
+      Caption = '&3'
+      ImageIndex = 3
+      OnClick = btnSelectBlockClick
+    end
+    object miSelectBlock4: TMenuItem
+      Caption = '&4'
+      ImageIndex = 4
+      OnClick = btnSelectBlockClick
+    end
+    object miSelectBlock5: TMenuItem
+      Caption = '&5'
+      ImageIndex = 5
+      OnClick = btnSelectBlockClick
+    end
+    object miSelectBlock6: TMenuItem
+      Caption = '&6'
+      ImageIndex = 6
+      OnClick = btnSelectBlockClick
+    end
+    object miSelectBlock7: TMenuItem
+      Caption = '&7'
+      ImageIndex = 7
+      OnClick = btnSelectBlockClick
+    end
+    object miSelectBlock8: TMenuItem
+      Caption = '&8'
+      ImageIndex = 8
+      OnClick = btnSelectBlockClick
+    end
+    object miSelectBlock9: TMenuItem
+      Caption = '&9'
+      ImageIndex = 9
+      OnClick = btnSelectBlockClick
+    end
   end
 end

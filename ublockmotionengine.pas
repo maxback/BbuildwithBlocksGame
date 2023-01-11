@@ -5,7 +5,7 @@ unit uBlockMotionEngine;
 interface
 
 uses
-  Classes, SysUtils, forms, uPSComponent, uBlockColection;
+  Classes, SysUtils, forms, MMSystem, uPSComponent, uBlockColection;
 
 type
 
@@ -15,6 +15,8 @@ type
   TBlockMotionEngineLog = procedure (Sender: TMotionBlockControl; const msg: string) of object;
   TBlockMotionEngineMove = procedure (Sender: TMotionBlockControl; const x,y,z: integer) of object;
   TBlockMotionEnginePut = procedure (Sender: TMotionBlockControl; const index: integer) of object;
+  TBlockMotionEngineMoveBlock = procedure (Sender: TMotionBlockControl;
+    const x,y,z: integer; const effect: String) of object;
 
   TMotionBlockControl = class
   public
@@ -23,9 +25,11 @@ type
     FsScriptFileName: string;
     FoEventMove: TBlockMotionEngineMove;
     FoEventPut: TBlockMotionEnginePut;
+    FoEventMoveBlock: TBlockMotionEngineMoveBlock;
 
     constructor Create(block: TBlock; const scriptFileName: string;
-     oEventMove: TBlockMotionEngineMove; oEventPut: TBlockMotionEnginePut);
+     oEventMove: TBlockMotionEngineMove; oEventPut: TBlockMotionEnginePut;
+     oEventMoveBlock: TBlockMotionEngineMoveBlock);
   end;
 
   { TBlockMotionEngine }
@@ -36,7 +40,8 @@ type
     procedure PSScript1Compile(Sender: TPSScript);
 
     class procedure insert(block: TBlock; const scriptFileName: string;
-       oEventMove: TBlockMotionEngineMove; oEventPut: TBlockMotionEnginePut);
+       oEventMove: TBlockMotionEngineMove; oEventPut: TBlockMotionEnginePut;
+       oEventMoveBlock: TBlockMotionEngineMoveBlock);
     class procedure setCurrentPlaceBlockCollection(value: TBlockColection);
     class procedure setEventLog(value: TBlockMotionEngineLog);
   end;
@@ -116,7 +121,7 @@ function SReadBlock(const blockId: integer; const x, y, z: integer): integer;
 var
   b: TBlock;
 begin
-  result := 0;
+  result := -1;
   if not Assigned(goCurrentPlaceBlockCollection) then
     exit;
 
@@ -153,16 +158,45 @@ begin
   blockcontrol.FoEventPut(blockcontrol, -1);
 end;
 
+procedure SMoveBlock(const blockId: integer; const x, y, z: integer; effect: String);
+var
+  blockcontrol: TMotionBlockControl;
+begin
+  blockcontrol := GetMotionBlockControlById(blockId);
+  if not Assigned(blockcontrol) then
+    exit;
+  if not Assigned(blockcontrol.FoEventMoveBlock) then
+    exit;
+  blockcontrol.FoEventMoveBlock(blockcontrol, x, y, z, effect);
+end;
+
+
+procedure SSoundBlock(const blockId: integer; n: integer);
+var
+  blockcontrol: TMotionBlockControl;
+  s: string;
+begin
+  blockcontrol := GetMotionBlockControlById(blockId);
+  if not Assigned(blockcontrol) then
+    exit;
+
+    s := blockcontrol.FoBlock.FsFileName + Format('.%d.wav', [n]);
+    PlaySound(PChar(s), 0, SND_ASYNC);
+end;
+
+
 { TMotionBlockControl }
 
 constructor TMotionBlockControl.Create(block: TBlock; const scriptFileName: string;
-     oEventMove: TBlockMotionEngineMove; oEventPut: TBlockMotionEnginePut);
+     oEventMove: TBlockMotionEngineMove; oEventPut: TBlockMotionEnginePut;
+     oEventMoveBlock: TBlockMotionEngineMoveBlock);
 begin
   FnId := -1;
   FoBlock := block;
   FsScriptFileName := scriptFileName;
   FoEventMove := oEventMove;
   FoEventPut := oEventPut;
+  FoEventMoveBlock := oEventMoveBlock;
 end;
 
 procedure SLog(const blockId: integer; const msg: string);
@@ -191,10 +225,17 @@ begin
   Sender.AddFunction(@SReadBlock, 'function readBlock(const blockId: integer; const x, y, z: integer): integer');
   Sender.AddFunction(@SPutBlock, 'procedure putBlock(const blockId: integer; const blockIndex: integer)');
   Sender.AddFunction(@SPickBlock, 'procedure pickBlock(const blockId: integer)');
+
+  Sender.AddFunction(@SMoveBlock, 'procedure moveBlock(const blockId: integer; const x, y, z: integer; effect: String)');
+  Sender.AddFunction(@SSoundBlock, 'procedure soundBlock(const blockId: integer; n: integer)');
+
+  Sender.AddFunction(@Randomize, 'procedure Randomize');
+  Sender.AddFunction(@Random, 'Function Random(l:longint):longint');
 end;
 
 class procedure TBlockMotionEngine.insert(block: TBlock; const scriptFileName: string;
-     oEventMove: TBlockMotionEngineMove; oEventPut: TBlockMotionEnginePut);
+     oEventMove: TBlockMotionEngineMove; oEventPut: TBlockMotionEnginePut;
+     oEventMoveBlock: TBlockMotionEngineMoveBlock);
 var
   PSScript1: TPSScript;
   engine: TBlockMotionEngine;
@@ -215,7 +256,7 @@ begin
     PSScript1.OnCompile := @engine.PSScript1Compile;
 
     goLastMotionBlockCreated := TMotionBlockControl.Create(block, scriptFileName,
-      oEventMove, oEventPut);
+      oEventMove, oEventPut, oEventMoveBlock);
 
     Result:= False;
     sl.LoadFromFile(scriptFileName);

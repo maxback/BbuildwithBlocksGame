@@ -1,29 +1,32 @@
 program l;
 
-const
-  C_COUNT = 5;
-
 var
-  i, id, x, y, z, blockid: integer;
+  i, id, x0, x, y0, y, z0, blockid: integer;
   
 begin
   id := born;
   
-  x := read(id, 'x');
-  y := read(id, 'y');
-  z := read(id, 'z');
+  x0 := read(id, 'x');
+  y0 := read(id, 'y');
+  z0 := read(id, 'z');
   blockid := read(id, 'blockid');
   
-  log(id, 'Hello Thomas!! A born today!! at x: ' + IntToStr(x) + ', y: ' + IntToStr(y) + ', z: ' + IntToStr(z));
+  log(id, 'Hello Thomas!! A fence will be maked!! at x: ' + IntToStr(x0) + ', y: ' + IntToStr(y0) + ', z: ' + IntToStr(z0));
 
 
-  for i := 0 to C_COUNT - 1 do
-	begin
-      putBlock(id, blockid);
-	  x := x + 1;
-      move(id, x, y, z);
-	end;
+    for x := 1 to 100 do
+  	  begin
+	    move(id, x0 + x, y0, z0); 
+		log(id, 'testing in ' + IntToStr(x) + ', y: ' + IntToStr(y) + ', z: ' + IntToStr(z)));
+	    if readBlock(id) = -1 then
+        begin
+		  putBlock(id, blockid);
+		end
+        else
+		  break;
+		
+	  end;
 
-	log(id, '*** I am Done! My presure!!');
+	log(id, '*** I am Done! Happy to help!!');
 
 end.

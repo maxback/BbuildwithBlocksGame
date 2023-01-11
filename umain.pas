@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, ComCtrls,
-  Buttons, StdCtrls, IniFiles, LCLType, Dos, utypes, uBlockColection,
+  Buttons, StdCtrls, IniFiles, LCLType, Menus, Dos, utypes, uBlockColection,
   uBlockMotionEngine, uControlConfig, uAbstractDrawer, uLoggerOfDrawer,
   uPSComponent;
 
@@ -36,6 +36,7 @@ type
     btnInsert: TSpeedButton;
     btnBlock0: TSpeedButton;
     btnPick: TSpeedButton;
+    btnSelectedBlock: TSpeedButton;
     edtCmd: TEdit;
     imageTargetPlace1Pick1: TImage;
     inventoryImageList: TImageList;
@@ -46,8 +47,19 @@ type
     imageTargetPlace1Pick: TImage;
     ImageToLoad: TImage;
     lblShortCuts: TLabel;
+    miSelectBlock9: TMenuItem;
+    miSelectBlock8: TMenuItem;
+    miSelectBlock7: TMenuItem;
+    miSelectBlock6: TMenuItem;
+    miSelectBlock5: TMenuItem;
+    miSelectBlock4: TMenuItem;
+    miSelectBlock3: TMenuItem;
+    miSelectBlock2: TMenuItem;
+    miSelectBlock1: TMenuItem;
+    miSelectBlock0: TMenuItem;
     mmCmd: TMemo;
     MemoDataPlace1: TMemo;
+    pnlSelectedBlock: TPanel;
     panelTools: TPanel;
     panelTools1: TPanel;
     panelTools10: TPanel;
@@ -62,6 +74,7 @@ type
     panelTools9: TPanel;
     PanelTop: TPanel;
     pgPlaces: TPageControl;
+    pmSelectedBlock: TPopupMenu;
     PSScript1: TPSScript;
     StatusBar: TStatusBar;
     TabSheet1: TTabSheet;
@@ -71,6 +84,7 @@ type
     procedure btnInsertClick(Sender: TObject);
     procedure btnPickClick(Sender: TObject);
     procedure btnSelectBlockClick(Sender: TObject);
+    procedure btnSelectedBlockClick(Sender: TObject);
     procedure edtCmdKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -100,6 +114,9 @@ type
     procedure BlockMotionEngineMove(Sender: TMotionBlockControl; const x,y,z: integer);
     procedure BlockMotionEnginePut(Sender: TMotionBlockControl; const index: integer);
     procedure BlockMotionEngineLog(Sender: TMotionBlockControl; const msg: string);
+    procedure BlockMotionEngineMoveBlock(Sender: TMotionBlockControl;
+      const x,y,z: integer; const effect: String);
+
 
     procedure updateTargetImagePosition;
     procedure loadTexts;
@@ -295,6 +312,8 @@ end;
 procedure TfrmGame.updateSelectedBlock(const index: integer;
   blocksImageList: TImageList);
 begin
+  btnSelectedBlock.ImageIndex := index;
+
   FoDrawer.FnSelectedBlockIndex := index;
   FoDrawer.FoBlockImages := blocksImageList;
   StatusBar.Panels.Items[STATUSBAR_SELECTED_BLOCK_INDEX].Text :=
@@ -309,7 +328,8 @@ begin
     s := b.FsFileName + '.pas';
     if FileExists(s) then
     begin
-      TBlockMotionEngine.insert(b, s, @BlockMotionEngineMove, @BlockMotionEnginePut);
+      TBlockMotionEngine.insert(b, s, @BlockMotionEngineMove, @BlockMotionEnginePut,
+        @BlockMotionEngineMoveBlock);
     end;
   except
     on e:Exception do
@@ -320,20 +340,28 @@ end;
 procedure TfrmGame.putNewBlock(const alowMotion: boolean);
 var
   b: Tblock;
+  index: integer;
 begin
+
   if FbBlocked then
   begin
     ShowMessage('You have no time!!!!! Only basic commands are avilable!');
     exit;
   end;
 
-  b := FoDrawer.putNewBlock(imageTargetPlace1hand);
+  index := FoDrawer.FnSelectedBlockIndex;
+  try
+    b := FoDrawer.putNewBlock(imageTargetPlace1hand);
 
-  FoLastMoveKind := makMoveAfterInsert;
-  updateTargetImagePosition;
+    FoLastMoveKind := makMoveAfterInsert;
+    updateTargetImagePosition;
 
-  if alowMotion then
-    initMotion(b);
+    if alowMotion then
+      initMotion(b);
+  finally
+    updateSelectedBlock(index,
+      ImageListBlocksMenu as TImageList);
+  end;
 
 end;
 
@@ -563,6 +591,8 @@ begin
     for i := 0 to 9 do
       FMenuButtonsList[i] := TSpeedButton(FindComponent('btnBlock' + IntToStr(i)));
 
+    TBlockMotionEngine.setCurrentPlaceBlockCollection(FoCurrentPlaceBlockCollection);
+
     FnSelectedBlockIndex := -1;
     FoCurrentPlaceTabSeet := pgPlaces.ActivePage;
     FoCurrentPlaceImageBackgroung := imageBackgroungPlace1;
@@ -636,6 +666,10 @@ begin
   else if key = VK_I then
   begin
     callInventory;
+  end
+  else if key = 190 {VK_POINT} then
+  begin
+    btnSelectedBlockClick(self);
   end
   else
     handleBlockSelection(key);
@@ -712,16 +746,30 @@ end;
 procedure TfrmGame.btnSelectBlockClick(Sender: TObject);
 var
   index: integer;
+  il: TImageList;
 begin
-  if not (Sender is TSpeedButton) then
+  if Sender is TSpeedButton then
+  begin
+    if (Sender as TSpeedButton).images = nil then
+      exit;
+    index := (Sender as TSpeedButton).imageIndex;
+    il := (Sender as TSpeedButton).images as TImageList;
+    (Sender as TSpeedButton).Down := true;
+  end
+  else if Sender is TMenuItem then
+  begin
+    index := (Sender as TMenuItem).imageIndex;
+    il := ImageListBlocksMenu;
+  end
+  else
     exit;
-  if (Sender as TSpeedButton).images = nil then
-    exit;
-  index := (Sender as TSpeedButton).imageIndex;
 
-  updateSelectedBlock(index,
-    (Sender as TSpeedButton).images as TImageList);
-  (Sender as TSpeedButton).Down := true;
+  updateSelectedBlock(index, il);
+end;
+
+procedure TfrmGame.btnSelectedBlockClick(Sender: TObject);
+begin
+  pmSelectedBlock.PopUp;
 end;
 
 procedure TfrmGame.edtCmdKeyDown(Sender: TObject; var Key: Word;
@@ -814,6 +862,18 @@ procedure TfrmGame.BlockMotionEngineLog(Sender: TMotionBlockControl;
 begin
   mmCmd.Lines.Add('log: from motion block ID ' + IntToStr(Sender.FnId)
     + ' => ' + msg);
+end;
+
+procedure TfrmGame.BlockMotionEngineMoveBlock(Sender: TMotionBlockControl;
+  const x, y, z: integer; const effect: String);
+begin
+  FoDrawer.FnCurrentPlacePositionX := x;
+  FoDrawer.FnCurrentPlacePositionY := y;
+  FoDrawer.FnCurrentPlacePositionZ := Z;
+
+  updateTargetImagePosition;
+
+  FoDrawer.moveBlock(Sender.FoBlock, effect);
 end;
 
 end.
