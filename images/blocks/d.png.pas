@@ -1,4 +1,4 @@
-program bomb;
+program d;
 
  
 //this uses and dummy functions emulate the engile 
@@ -18,10 +18,10 @@ procedure soundBlock(const blockId: integer; const n: integer); begin WriteLn('s
 }//end of dummy  
 
 const
-  C_MIN_COUNT = 3;
-  C_MAX_COUNT = 7;
-  C_MIN_RADIO = 2;
-  C_MAX_RADIO = 10;
+  C_MIN_COUNT = 7;
+  C_MAX_COUNT = 12;
+  C_MIN_RADIO = 10;
+  C_MAX_RADIO = 50;
 
   C_SOUND = 0;
 

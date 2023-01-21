@@ -48,10 +48,6 @@ begin
   y := read(id, 'y');
   z := read(id, 'z');
   blockid := read(id, 'blockid');
-
-  x0 := x;
-  y0 := y;
-  z0 := z;
   
   //Teste if have soil on coordinate or one of adjacent blocks
   if (haveSoil(id, x, y, z) or haveSoil(id, x - 1, y, z) or haveSoil(id, x + 1, y, z) or
