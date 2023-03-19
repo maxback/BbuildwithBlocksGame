@@ -1,7 +1,7 @@
 object frmGame: TfrmGame
-  Left = 417
+  Left = 211
   Height = 520
-  Top = 144
+  Top = 102
   Width = 954
   Align = alTop
   Caption = 'frmGame'
@@ -37,6 +37,7 @@ object frmGame: TfrmGame
         Align = alClient
         OnClick = imageBackgroungPlace1Click
         OnMouseDown = imageBackgroungPlace1MouseDown
+        OnMouseMove = imageBackgroungPlace1MouseMove
         Stretch = True
       end
       object MemoDataPlace1: TMemo
@@ -779,7 +780,7 @@ object frmGame: TfrmGame
     Top = 66
     Width = 954
     Align = alTop
-    Caption = '           h                  p                                        0                 1                  2                 3                  4                  5                  6                  7                8                   9       . to menu  and: home, i,  and (z or ctrl +z) to move'
+    Caption = '           h                  p                                        0                 1                  2                 3                  4                  5                  6                  7                8                   9       . ou ''o'' to menu, home, i,  and (z or ctrl +z) to move. c => command'
     Font.CharSet = ANSI_CHARSET
     Font.Pitch = fpVariable
     Font.Quality = fqDraft
@@ -788,14 +789,14 @@ object frmGame: TfrmGame
     OnClick = lblShortCutsClick
   end
   object pnlSelectedBlock: TPanel
-    Left = 559
+    Left = 514
     Height = 21
     Top = 499
-    Width = 34
+    Width = 80
     Anchors = [akLeft, akBottom]
     BevelOuter = bvNone
     ClientHeight = 21
-    ClientWidth = 34
+    ClientWidth = 80
     TabOrder = 4
     object btnSelectedBlock: TSpeedButton
       Left = 0
@@ -812,6 +813,16 @@ object frmGame: TfrmGame
       ShowCaption = False
       ShowHint = True
       ParentShowHint = False
+    end
+    object lblOptions: TLabel
+      Left = 35
+      Height = 15
+      Top = 2
+      Width = 42
+      Caption = '&Options'
+      ParentColor = False
+      PopupMenu = pmOptions
+      OnClick = lblOptionsClick
     end
   end
   object ImageList: TImageList
@@ -1162,6 +1173,34 @@ object frmGame: TfrmGame
       Caption = '&9'
       ImageIndex = 9
       OnClick = btnSelectBlockClick
+    end
+  end
+  object pmOptions: TPopupMenu
+    Left = 840
+    Top = 400
+    object miMoveByMouse: TMenuItem
+      Caption = '&Use mouse to move hand or pick'
+      Checked = True
+      OnClick = miMoveByMouseClick
+    end
+    object miSaveWorld: TMenuItem
+      Caption = '&Save World...'
+      OnClick = miSaveWorldClick
+    end
+    object miLoadWorld: TMenuItem
+      Caption = '&Load World...'
+      OnClick = miLoadWorldClick
+    end
+    object miClearAll: TMenuItem
+      Caption = '&Clear All!'
+      OnClick = miClearAllClick
+    end
+    object Separator1: TMenuItem
+      Caption = '-'
+    end
+    object miLoadWorldAtCursor: TMenuItem
+      Caption = 'Load World &At Cursor...'
+      OnClick = miLoadWorldAtCursorClick
     end
   end
 end

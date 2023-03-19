@@ -1,0 +1,31 @@
+object frmCmdHelp: TfrmCmdHelp
+  Left = 235
+  Height = 384
+  Top = 31
+  Width = 524
+  BorderStyle = bsToolWindow
+  Caption = 'Commands Help'
+  ClientHeight = 384
+  ClientWidth = 524
+  FormStyle = fsStayOnTop
+  OnCloseQuery = FormCloseQuery
+  Position = poMainFormCenter
+  LCLVersion = '2.2.4.0'
+  object Memo1: TMemo
+    Left = 0
+    Height = 384
+    Top = 0
+    Width = 524
+    Align = alClient
+    Color = clBtnFace
+    Lines.Strings = (
+      'List of commands:'
+      '  r <length> - put a row with <lenght> blocks by position to right (e.g.: r 10);'
+      '  c <lenght> - put a column with <lenght> blocks by position to up (e.g.: c 10);'
+      '  rec <columns> <rows> [fill] - put a rect of <columns> blocks in columns and <rows>'
+      '    blocks in rowns. if "fill" present the rectangle will be filled (e.g.: rec 10 10  and rec 10 10 fill).'
+    )
+    ReadOnly = True
+    TabOrder = 0
+  end
+end

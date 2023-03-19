@@ -18,6 +18,15 @@ type
   TBlockMotionEngineMoveBlock = procedure (Sender: TMotionBlockControl;
     const x,y,z: integer; const effect: String) of object;
 
+  TBlockMotionEngineExecutionThread = class;
+
+  TMotionBlockControlEventsParam = record
+    oEventMove: TBlockMotionEngineMove;
+    oEventPut: TBlockMotionEnginePut;
+    oEventMoveBlock: TBlockMotionEngineMoveBlock;
+    oEventMoveBlockWithOutCursor: TBlockMotionEngineMoveBlock;
+  end;
+
   TMotionBlockControl = class
   public
     FnId: integer;
@@ -26,25 +35,66 @@ type
     FoEventMove: TBlockMotionEngineMove;
     FoEventPut: TBlockMotionEnginePut;
     FoEventMoveBlock: TBlockMotionEngineMoveBlock;
+    FoEventMoveBlockWithOutCursor: TBlockMotionEngineMoveBlock;
 
+    SleepTime: integer;
+    thread: TBlockMotionEngineExecutionThread;
+
+    FnCurrentX: integer;
+    FnCurrentY: integer;
+    FnCurrentZ: integer;
+
+    procedure DoSleep;
     constructor Create(block: TBlock; const scriptFileName: string;
-     oEventMove: TBlockMotionEngineMove; oEventPut: TBlockMotionEnginePut;
-     oEventMoveBlock: TBlockMotionEngineMoveBlock);
+      events: TMotionBlockControlEventsParam);
   end;
 
   { TBlockMotionEngine }
+  TBlockMotionEngine = class;
 
+  { TBlockMotionEngineExecutionThread }
+
+  TBlockMotionEngineExecutionThread = class(TThread)
+  private
+    FoEngine: TBlockMotionEngine;
+    FoPSScript: TPSScript;
+    FsScriptFileName: string;
+    FnSleepTime: integer;
+  protected
+    procedure Execute; override;
+  public
+    procedure DoSleep;
+    procedure DoSleep(SleepTime: integer);
+    Constructor Create(CreateSuspended : boolean; PSScript1: TPSScript;
+      Engine: TBlockMotionEngine; ScriptFileName: String);
+  end;
 
   TBlockMotionEngine = class
   public
     procedure PSScript1Compile(Sender: TPSScript);
 
     class procedure insert(block: TBlock; const scriptFileName: string;
-       oEventMove: TBlockMotionEngineMove; oEventPut: TBlockMotionEnginePut;
-       oEventMoveBlock: TBlockMotionEngineMoveBlock);
+       events: TMotionBlockControlEventsParam);
+
+    class procedure insertWithThread(block: TBlock; const scriptFileName: string;
+       const events: TMotionBlockControlEventsParam);
+
+
     class procedure setCurrentPlaceBlockCollection(value: TBlockColection);
     class procedure setEventLog(value: TBlockMotionEngineLog);
   end;
+
+  function SRead(const blockId: integer; const prop: string): integer;
+  procedure SSleep(const blockId: integer; const time: integer);
+  procedure SMove(const blockId: integer; const x, y, z: integer);
+  function SReadBlock(const blockId: integer; const x, y, z: integer): integer;
+  procedure SPutBlock(const blockId: integer; const blockIndex: integer);
+  procedure SPickBlock(const blockId: integer);
+  procedure SMoveBlock(const blockId: integer; const x, y, z: integer; effect: String);
+  procedure SSoundBlock(const blockId: integer; n: integer);
+  procedure SMoveThisBlock(const blockId: integer; const x, y, z: integer; effect: String);
+
+
 
 var
   gslBlocks: TStringList;
@@ -99,9 +149,14 @@ begin
 end;
 
 procedure SSleep(const blockId: integer; const time: integer);
+var
+  blockcontrol: TMotionBlockControl;
 begin
-  Sleep(time);
-Application.ProcessMessages;
+  blockcontrol := GetMotionBlockControlById(blockId);
+  if not Assigned(blockcontrol) then
+    exit;
+  blockcontrol.SleepTime := time;
+  blockcontrol.DoSleep;
 
 end;
 
@@ -170,6 +225,19 @@ begin
   blockcontrol.FoEventMoveBlock(blockcontrol, x, y, z, effect);
 end;
 
+procedure SMoveThisBlock(const blockId: integer; const x, y, z: integer; effect: String);
+var
+  blockcontrol: TMotionBlockControl;
+begin
+  blockcontrol := GetMotionBlockControlById(blockId);
+  if not Assigned(blockcontrol) then
+    exit;
+  if not Assigned(blockcontrol.FoEventMoveBlockWithOutCursor) then
+    exit;
+  blockcontrol.FoEventMoveBlockWithOutCursor(blockcontrol, x, y, z, effect);
+end;
+
+
 
 procedure SSoundBlock(const blockId: integer; n: integer);
 var
@@ -184,20 +252,123 @@ begin
     PlaySound(PChar(s), 0, SND_ASYNC);
 end;
 
+{ TBlockMotionEngineExecutionThread }
+
+procedure TBlockMotionEngineExecutionThread.Execute;
+var
+   i: Integer;
+   result: boolean;
+   sl, slError: TStringList;
+   //based on https://wiki.freepascal.org/Pascal_Script_Examples
+   sErrorFileName, sError: String;
+begin
+  sErrorFileName := FsScriptFileName + '.ErrorList.txt';
+  sl := TStringList.Create;
+  slError := TStringList.Create;
+  try
+    DeleteFile(sErrorFileName);
+    try
+
+      if not FileExists(FsScriptFileName) then
+        raise Exception.Create('Error inserting motion block with script ' + FsScriptFileName + ': File not found');
+
+
+      FoPSScript.OnCompile := @FoEngine.PSScript1Compile;
+
+      Result:= False;
+      sl.LoadFromFile(FsScriptFileName);
+      FoPSScript.Script.Text:= sl.Text;
+      result:= FoPSScript.Compile;
+
+      if (not result) or (FoPSScript.CompilerMessageCount > 0) then
+      begin
+        sError := 'Error inserting motion block with script ' + FsScriptFileName + '. count: ' + IntToStr(FoPSScript.CompilerMessageCount);
+        slError.Add(sError);
+        for i:= 0 to FoPSScript.CompilerMessageCount - 1 do
+          slError.Add(FoPSScript.CompilerMessages[i].MessageToString);
+      end;
+
+      if result then
+      begin
+        try
+            Result := FoPSScript.Execute;
+        except
+          on E: Exception do
+          begin
+            raise Exception.Create('Error inserting motion block with script ' + FsScriptFileName
+              + ': Run-time error:'+ e.Message);
+          end;
+        end;
+
+        if not Result then
+         raise Exception.Create('Error inserting motion block with script ' + FsScriptFileName
+           + ': Run-time error:'+ FoPSScript.ExecErrorToString);
+      end;
+
+    except
+      on E: Exception do
+      begin
+        slError.Add(e.Message);
+      end;
+    end;
+  finally
+    if slError.Count > 0 then
+      slError.SaveToFile(sErrorFileName);
+
+    FoPSScript.Free;
+    FoEngine.Free;
+    sl.Free;
+    slError.Free;
+  end;
+end;
+
+procedure TBlockMotionEngineExecutionThread.DoSleep;
+begin
+  Sleep(FnSleepTime);
+end;
+
+procedure TBlockMotionEngineExecutionThread.DoSleep(SleepTime: integer);
+begin
+  FnSleepTime := SleepTime;
+  Sleep(FnSleepTime);
+end;
+
+constructor TBlockMotionEngineExecutionThread.Create(CreateSuspended: boolean;
+  PSScript1: TPSScript; Engine: TBlockMotionEngine; ScriptFileName: String);
+begin
+  FoPSScript := PSScript1;
+  FoEngine := Engine;
+  FsScriptFileName := ScriptFileName;
+  inherited Create(CreateSuspended);
+  FreeOnTerminate := True;
+end;
+
 
 { TMotionBlockControl }
 
+procedure TMotionBlockControl.DoSleep;
+begin
+  if thread <> nil then
+    thread.DoSleep(SleepTime)
+  else
+    Sleep(SleepTime);
+end;
+
+
 constructor TMotionBlockControl.Create(block: TBlock; const scriptFileName: string;
-     oEventMove: TBlockMotionEngineMove; oEventPut: TBlockMotionEnginePut;
-     oEventMoveBlock: TBlockMotionEngineMoveBlock);
+  events: TMotionBlockControlEventsParam);
 begin
   FnId := -1;
   FoBlock := block;
   FsScriptFileName := scriptFileName;
-  FoEventMove := oEventMove;
-  FoEventPut := oEventPut;
-  FoEventMoveBlock := oEventMoveBlock;
+  FoEventMove := events.oEventMove;
+  FoEventPut := events.oEventPut;
+  FoEventMoveBlock := events.oEventMoveBlock;
+  FoEventMoveBlockWithOutCursor := events.oEventMoveBlockWithOutCursor;
+
 end;
+
+
 
 procedure SLog(const blockId: integer; const msg: string);
 var
@@ -226,7 +397,7 @@ begin
   Sender.AddFunction(@SPutBlock, 'procedure putBlock(const blockId: integer; const blockIndex: integer)');
   Sender.AddFunction(@SPickBlock, 'procedure pickBlock(const blockId: integer)');
 
-  Sender.AddFunction(@SMoveBlock, 'procedure moveBlock(const blockId: integer; const x, y, z: integer; effect: String)');
+  Sender.AddFunction(@SMoveThisBlock, 'procedure moveBlock(const blockId: integer; const x, y, z: integer; effect: String)');
   Sender.AddFunction(@SSoundBlock, 'procedure soundBlock(const blockId: integer; n: integer)');
 
   Sender.AddFunction(@Randomize, 'procedure Randomize');
@@ -234,8 +405,7 @@ begin
 end;
 
 class procedure TBlockMotionEngine.insert(block: TBlock; const scriptFileName: string;
-     oEventMove: TBlockMotionEngineMove; oEventPut: TBlockMotionEnginePut;
-     oEventMoveBlock: TBlockMotionEngineMoveBlock);
+     events: TMotionBlockControlEventsParam);
 var
   PSScript1: TPSScript;
   engine: TBlockMotionEngine;
@@ -256,7 +426,7 @@ begin
     PSScript1.OnCompile := @engine.PSScript1Compile;
 
     goLastMotionBlockCreated := TMotionBlockControl.Create(block, scriptFileName,
-      oEventMove, oEventPut, oEventMoveBlock);
+      events);
 
     Result:= False;
     sl.LoadFromFile(scriptFileName);
@@ -280,6 +450,29 @@ begin
     sl.Free;
   end;
 
+end;
+
+class procedure TBlockMotionEngine.insertWithThread(block: TBlock;
+  const scriptFileName: string; const events: TMotionBlockControlEventsParam);
+var
+  PSScript1: TPSScript;
+  engine: TBlockMotionEngine;
+  //based on https://wiki.freepascal.org/Pascal_Script_Examples
+  //t: TBlockMotionEngineExecutionThread;
+begin
+  if not FileExists(scriptFileName) then
+    raise Exception.Create('Error inserting motion block with script ' + scriptFileName + ': File not found');
+
+  engine := TBlockMotionEngine.Create;
+  PSScript1 := TPSScript.Create(nil);
+
+  PSScript1.OnCompile := @engine.PSScript1Compile;
+
+  goLastMotionBlockCreated := TMotionBlockControl.Create(block, scriptFileName,
+    events);
+
+  //t :=
+  goLastMotionBlockCreated.thread := TBlockMotionEngineExecutionThread.Create(false, PSScript1, engine, scriptFileName);
 end;
 
 class procedure TBlockMotionEngine.setCurrentPlaceBlockCollection(

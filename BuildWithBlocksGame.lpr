@@ -11,8 +11,8 @@ uses
   {$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms, umain, uInventory, utypes, uAbstractDrawer, uControlConfig, 
-  uBlockColection, uloggerofdrawer, uBlockMotionEngine, pascalscript
-  { you can add units after this };
+  uBlockColection, uloggerofdrawer, uBlockMotionEngine, pascalscript, 
+uloadworls, ucmdhelp;
 
 {$R *.res}
 
@@ -21,6 +21,7 @@ begin
   Application.Scaled:=True;
   Application.Initialize;
   Application.CreateForm(TfrmGame, frmGame);
+  Application.CreateForm(TfrmCmdHelp, frmCmdHelp);
   Application.Run;
 end.
 

@@ -1,0 +1,44 @@
+object frmLoadWorld: TfrmLoadWorld
+  Left = 447
+  Height = 406
+  Top = 164
+  Width = 409
+  Caption = 'Load World'
+  ClientHeight = 406
+  ClientWidth = 409
+  KeyPreview = True
+  OnCreate = FormCreate
+  OnKeyDown = FormKeyDown
+  LCLVersion = '2.2.4.0'
+  object lvWorlds: TListView
+    Left = 10
+    Height = 342
+    Top = 10
+    Width = 386
+    Columns = <>
+    TabOrder = 0
+    OnChange = lvWorldsChange
+  end
+  object btnCancel: TBitBtn
+    Left = 232
+    Height = 30
+    Top = 360
+    Width = 75
+    Cancel = True
+    DefaultCaption = True
+    Kind = bkCancel
+    ModalResult = 2
+    TabOrder = 1
+  end
+  object btnOk: TBitBtn
+    Left = 320
+    Height = 30
+    Top = 360
+    Width = 75
+    Default = True
+    DefaultCaption = True
+    Kind = bkOK
+    ModalResult = 1
+    TabOrder = 2
+  end
+end

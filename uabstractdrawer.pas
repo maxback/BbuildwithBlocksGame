@@ -45,6 +45,8 @@ type
 
     procedure moveBlock(block: TBlock; const effect: string); virtual;
 
+    procedure moveBlockToWithoutCursor(block: TBlock; const x, y, z: integer;
+      const effect: string); virtual;
 
     procedure setNextDrawer(drawer: TAbstractDrawer);
 
@@ -174,6 +176,27 @@ begin
   if Assigned(FoNextDrawer) then
     FoNextDrawer.moveBlock(block, effect);
 
+end;
+
+procedure TAbstractDrawer.moveBlockToWithoutCursor(block: TBlock; const x, y,
+  z: integer; const effect: string);
+var
+  t, l: integer;
+begin
+  t := FnCurrentPlaceOffsetY + (FoCurrentPlaceImageBackgroung.Height -
+  ((y + 1)  * FoCurrentPlaceImageTarget.Height));
+
+  l := FnCurrentPlaceOffsetX + (x * FoCurrentPlaceImageTarget.Width);
+
+  block.FoImage.Top :=  t + (z * C_OFFSET_Z);
+  block.FoImage.Left := l - (z * C_OFFSET_Z);
+
+  block.FoImage.Height := FoCurrentPlaceImageTarget.Height;
+  block.FoImage.Width := FoCurrentPlaceImageTarget.Width;
+
+
+  if Assigned(FoNextDrawer) then
+    FoNextDrawer.moveBlockToWithoutCursor(block, x, y, z, effect);
 end;
 
 procedure TAbstractDrawer.setNextDrawer(drawer: TAbstractDrawer);

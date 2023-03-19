@@ -21,6 +21,10 @@ type
     procedure pickBlock; override;
 	procedure moveBlock(block: TBlock; const effect: string); override;
 
+    procedure moveBlockToWithoutCursor(block: TBlock; const x, y, z: integer;
+      const effect: string); override;
+
+
   end;
 
 implementation
@@ -53,6 +57,15 @@ begin
     FoPrevDrawer.FnCurrentPlacePositionX, FoPrevDrawer.FnCurrentPlacePositionY,
     FoPrevDrawer.FnCurrentPlacePositionZ, effect]));
 
+end;
+
+procedure TLoggerOfDrawer.moveBlockToWithoutCursor(block: TBlock; const x, y,
+  z: integer; const effect: string);
+begin
+  FoLogger.Lines.Add(Format('moveBlockToWithoutCursor %d at (%d,%d,%d) with effect %s', [
+    block.FnImageIndex,
+    FoPrevDrawer.FnCurrentPlacePositionX, FoPrevDrawer.FnCurrentPlacePositionY,
+    FoPrevDrawer.FnCurrentPlacePositionZ, effect]));
 end;
 
 end.

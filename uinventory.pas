@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, Buttons,
-  StdCtrls, utypes;
+  StdCtrls, utypes, LCLType;
 
 type
 
@@ -23,8 +23,28 @@ type
     btnBlock23: TSpeedButton;
     btnBlock22: TSpeedButton;
     btnBlock21: TSpeedButton;
-    btnMenuBlock0: TSpeedButton;
+    btnBlock30: TSpeedButton;
+    btnBlock31: TSpeedButton;
+    btnBlock32: TSpeedButton;
+    btnBlock33: TSpeedButton;
+    btnBlock34: TSpeedButton;
+    btnBlock35: TSpeedButton;
+    btnBlock36: TSpeedButton;
+    btnBlock37: TSpeedButton;
+    btnBlock38: TSpeedButton;
+    btnBlock39: TSpeedButton;
+    btnBlock40: TSpeedButton;
+    btnBlock41: TSpeedButton;
+    btnBlock42: TSpeedButton;
+    btnBlock43: TSpeedButton;
+    btnBlock44: TSpeedButton;
+    btnBlock45: TSpeedButton;
+    btnBlock46: TSpeedButton;
+    btnBlock47: TSpeedButton;
+    btnBlock48: TSpeedButton;
+    btnBlock49: TSpeedButton;
     imageSel: TSpeedButton;
+    btnMenuBlock0: TSpeedButton;
     btnMenuBlock9: TSpeedButton;
     btnBlock0: TSpeedButton;
     btnBlock9: TSpeedButton;
@@ -56,11 +76,32 @@ type
     btnMenuBlock1: TSpeedButton;
     Label1: TLabel;
     Label2: TLabel;
+    Panel1: TPanel;
     panelTools1: TPanel;
     panelTools10: TPanel;
     panelTools100: TPanel;
+    panelTools101: TPanel;
+    panelTools102: TPanel;
+    panelTools103: TPanel;
+    panelTools104: TPanel;
+    panelTools105: TPanel;
+    panelTools106: TPanel;
+    panelTools107: TPanel;
+    panelTools108: TPanel;
+    panelTools109: TPanel;
     panelTools11: TPanel;
+    panelTools110: TPanel;
+    panelTools111: TPanel;
+    panelTools112: TPanel;
+    panelTools113: TPanel;
+    panelTools114: TPanel;
+    panelTools115: TPanel;
+    panelTools116: TPanel;
+    panelTools117: TPanel;
+    panelTools118: TPanel;
+    panelTools119: TPanel;
     panelTools12: TPanel;
+    panelTools120: TPanel;
     panelTools13: TPanel;
     panelTools14: TPanel;
     panelTools15: TPanel;
@@ -98,13 +139,16 @@ type
     panelTools99: TPanel;
     PanelTop: TPanel;
     PanelTop1: TPanel;
+    PanelTop10: TPanel;
+    PanelTop11: TPanel;
     PanelTop8: TPanel;
     PanelTop9: TPanel;
     ScrollBox1: TScrollBox;
-    shArrowPart3: TShape;
-    shArrowPart2: TShape;
     shArrowPart1: TShape;
+    shArrowPart2: TShape;
+    shArrowPart3: TShape;
     TimerAniShowArrow: TTimer;
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure ScrollBox1Click(Sender: TObject);
     procedure SelectDestinationClick(Sender: TObject);
     procedure SelecteSourceBlockClick(Sender: TObject);
@@ -132,6 +176,14 @@ implementation
 
 procedure TfrmInventory.ScrollBox1Click(Sender: TObject);
 begin
+
+end;
+
+procedure TfrmInventory.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_SPACE then
+    Close;
 
 end;
 

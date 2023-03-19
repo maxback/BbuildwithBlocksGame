@@ -1,16 +1,19 @@
 object frmInventory: TfrmInventory
-  Left = 554
-  Height = 418
-  Top = 114
+  Left = 308
+  Height = 574
+  Top = 82
   Width = 612
   Caption = 'Inventory'
-  ClientHeight = 418
+  ClientHeight = 574
   ClientWidth = 612
+  KeyPreview = True
+  OnKeyDown = FormKeyDown
+  Position = poMainFormCenter
   LCLVersion = '2.2.4.0'
   object PanelTop: TPanel
     Left = 0
     Height = 66
-    Top = 352
+    Top = 508
     Width = 612
     Align = alBottom
     BevelInner = bvRaised
@@ -280,13 +283,13 @@ object frmInventory: TfrmInventory
   end
   object ScrollBox1: TScrollBox
     Left = 0
-    Height = 240
-    Top = 15
+    Height = 312
+    Top = 81
     Width = 612
     HorzScrollBar.Page = 594
-    VertScrollBar.Page = 198
+    VertScrollBar.Page = 264
     Align = alClient
-    ClientHeight = 236
+    ClientHeight = 308
     ClientWidth = 608
     TabOrder = 1
     OnClick = ScrollBox1Click
@@ -1103,6 +1106,277 @@ object frmInventory: TfrmInventory
         end
       end
     end
+    object PanelTop10: TPanel
+      Left = 0
+      Height = 66
+      Top = 198
+      Width = 608
+      Align = alTop
+      BevelInner = bvRaised
+      ClientHeight = 66
+      ClientWidth = 608
+      TabOrder = 3
+      object panelTools101: TPanel
+        Left = 2
+        Height = 62
+        Top = 2
+        Width = 59
+        Align = alLeft
+        BevelInner = bvLowered
+        BevelOuter = bvLowered
+        ClientHeight = 62
+        ClientWidth = 59
+        TabOrder = 0
+        object btnBlock30: TSpeedButton
+          Left = 1
+          Height = 53
+          Top = 4
+          Width = 53
+          Flat = True
+          GroupIndex = 4
+          ImageIndex = 0
+          Transparent = False
+          OnClick = SelecteSourceBlockClick
+          ShowCaption = False
+          ShowHint = True
+          ParentShowHint = False
+        end
+      end
+      object panelTools102: TPanel
+        Left = 533
+        Height = 62
+        Top = 2
+        Width = 59
+        Align = alLeft
+        BevelInner = bvLowered
+        BevelOuter = bvLowered
+        ClientHeight = 62
+        ClientWidth = 59
+        TabOrder = 1
+        object btnBlock31: TSpeedButton
+          Left = 1
+          Height = 53
+          Top = 4
+          Width = 53
+          Flat = True
+          GroupIndex = 4
+          ImageIndex = 9
+          Transparent = False
+          OnClick = SelecteSourceBlockClick
+          ShowCaption = False
+          ShowHint = True
+          ParentShowHint = False
+        end
+      end
+      object panelTools103: TPanel
+        Left = 474
+        Height = 62
+        Top = 2
+        Width = 59
+        Align = alLeft
+        BevelInner = bvLowered
+        BevelOuter = bvLowered
+        ClientHeight = 62
+        ClientWidth = 59
+        TabOrder = 2
+        object btnBlock32: TSpeedButton
+          Left = 1
+          Height = 53
+          Top = 4
+          Width = 53
+          Flat = True
+          GroupIndex = 4
+          ImageIndex = 8
+          Transparent = False
+          OnClick = SelecteSourceBlockClick
+          ShowCaption = False
+          ShowHint = True
+          ParentShowHint = False
+        end
+      end
+      object panelTools104: TPanel
+        Left = 415
+        Height = 62
+        Top = 2
+        Width = 59
+        Align = alLeft
+        BevelInner = bvLowered
+        BevelOuter = bvLowered
+        ClientHeight = 62
+        ClientWidth = 59
+        TabOrder = 3
+        object btnBlock33: TSpeedButton
+          Left = 1
+          Height = 53
+          Top = 4
+          Width = 53
+          Flat = True
+          GroupIndex = 4
+          ImageIndex = 7
+          Transparent = False
+          OnClick = SelecteSourceBlockClick
+          ShowCaption = False
+          ShowHint = True
+          ParentShowHint = False
+        end
+      end
+      object panelTools105: TPanel
+        Left = 356
+        Height = 62
+        Top = 2
+        Width = 59
+        Align = alLeft
+        BevelInner = bvLowered
+        BevelOuter = bvLowered
+        ClientHeight = 62
+        ClientWidth = 59
+        TabOrder = 4
+        object btnBlock34: TSpeedButton
+          Left = 1
+          Height = 53
+          Top = 4
+          Width = 53
+          Flat = True
+          GroupIndex = 4
+          ImageIndex = 6
+          Transparent = False
+          OnClick = SelecteSourceBlockClick
+          ShowCaption = False
+          ShowHint = True
+          ParentShowHint = False
+        end
+      end
+      object panelTools106: TPanel
+        Left = 297
+        Height = 62
+        Top = 2
+        Width = 59
+        Align = alLeft
+        BevelInner = bvLowered
+        BevelOuter = bvLowered
+        ClientHeight = 62
+        ClientWidth = 59
+        TabOrder = 5
+        object btnBlock35: TSpeedButton
+          Left = 1
+          Height = 53
+          Top = 4
+          Width = 53
+          Flat = True
+          GroupIndex = 4
+          ImageIndex = 5
+          Transparent = False
+          OnClick = SelecteSourceBlockClick
+          ShowCaption = False
+          ShowHint = True
+          ParentShowHint = False
+        end
+      end
+      object panelTools107: TPanel
+        Left = 238
+        Height = 62
+        Top = 2
+        Width = 59
+        Align = alLeft
+        BevelInner = bvLowered
+        BevelOuter = bvLowered
+        ClientHeight = 62
+        ClientWidth = 59
+        TabOrder = 6
+        object btnBlock36: TSpeedButton
+          Left = 1
+          Height = 53
+          Top = 4
+          Width = 53
+          Flat = True
+          GroupIndex = 4
+          ImageIndex = 4
+          Transparent = False
+          OnClick = SelecteSourceBlockClick
+          ShowCaption = False
+          ShowHint = True
+          ParentShowHint = False
+        end
+      end
+      object panelTools108: TPanel
+        Left = 179
+        Height = 62
+        Top = 2
+        Width = 59
+        Align = alLeft
+        BevelInner = bvLowered
+        BevelOuter = bvLowered
+        ClientHeight = 62
+        ClientWidth = 59
+        TabOrder = 7
+        object btnBlock37: TSpeedButton
+          Left = 1
+          Height = 53
+          Top = 4
+          Width = 53
+          Flat = True
+          GroupIndex = 4
+          ImageIndex = 3
+          Transparent = False
+          OnClick = SelecteSourceBlockClick
+          ShowCaption = False
+          ShowHint = True
+          ParentShowHint = False
+        end
+      end
+      object panelTools109: TPanel
+        Left = 120
+        Height = 62
+        Top = 2
+        Width = 59
+        Align = alLeft
+        BevelInner = bvLowered
+        BevelOuter = bvLowered
+        ClientHeight = 62
+        ClientWidth = 59
+        TabOrder = 8
+        object btnBlock38: TSpeedButton
+          Left = 1
+          Height = 53
+          Top = 4
+          Width = 53
+          Flat = True
+          GroupIndex = 4
+          ImageIndex = 2
+          Transparent = False
+          OnClick = SelecteSourceBlockClick
+          ShowCaption = False
+          ShowHint = True
+          ParentShowHint = False
+        end
+      end
+      object panelTools110: TPanel
+        Left = 61
+        Height = 62
+        Top = 2
+        Width = 59
+        Align = alLeft
+        BevelInner = bvLowered
+        BevelOuter = bvLowered
+        ClientHeight = 62
+        ClientWidth = 59
+        TabOrder = 9
+        object btnBlock39: TSpeedButton
+          Left = 1
+          Height = 53
+          Top = 4
+          Width = 53
+          Flat = True
+          GroupIndex = 4
+          ImageIndex = 1
+          Transparent = False
+          OnClick = SelecteSourceBlockClick
+          ShowCaption = False
+          ShowHint = True
+          ParentShowHint = False
+        end
+      end
+    end
   end
   object Label1: TLabel
     Left = 0
@@ -1115,50 +1389,330 @@ object frmInventory: TfrmInventory
   end
   object Label2: TLabel
     Left = 0
-    Height = 97
-    Top = 255
+    Height = 36
+    Top = 393
     Width = 612
     Align = alBottom
     AutoSize = False
     Caption = '... And then on destination block:'
     ParentColor = False
   end
-  object imageSel: TSpeedButton
-    Left = 15
-    Height = 53
-    Top = 281
-    Width = 53
-    Anchors = [akTop, akLeft, akRight, akBottom]
-    Flat = True
-    GroupIndex = 3
-    ImageIndex = 0
-    Transparent = False
-    OnClick = SelectDestinationClick
-    ShowCaption = False
-    ShowHint = True
-    ParentShowHint = False
+  object PanelTop11: TPanel
+    Left = 0
+    Height = 66
+    Top = 15
+    Width = 612
+    Align = alTop
+    BevelInner = bvRaised
+    ClientHeight = 66
+    ClientWidth = 612
+    TabOrder = 2
+    object panelTools111: TPanel
+      Left = 2
+      Height = 62
+      Top = 2
+      Width = 59
+      Align = alLeft
+      BevelInner = bvLowered
+      BevelOuter = bvLowered
+      ClientHeight = 62
+      ClientWidth = 59
+      TabOrder = 0
+      object btnBlock40: TSpeedButton
+        Left = 1
+        Height = 53
+        Top = 4
+        Width = 53
+        Flat = True
+        GroupIndex = 4
+        ImageIndex = 0
+        Transparent = False
+        OnClick = SelecteSourceBlockClick
+        ShowCaption = False
+        ShowHint = True
+        ParentShowHint = False
+      end
+    end
+    object panelTools112: TPanel
+      Left = 533
+      Height = 62
+      Top = 2
+      Width = 59
+      Align = alLeft
+      BevelInner = bvLowered
+      BevelOuter = bvLowered
+      ClientHeight = 62
+      ClientWidth = 59
+      TabOrder = 1
+      object btnBlock41: TSpeedButton
+        Left = 1
+        Height = 53
+        Top = 4
+        Width = 53
+        Flat = True
+        GroupIndex = 4
+        ImageIndex = 9
+        Transparent = False
+        OnClick = SelecteSourceBlockClick
+        ShowCaption = False
+        ShowHint = True
+        ParentShowHint = False
+      end
+    end
+    object panelTools113: TPanel
+      Left = 474
+      Height = 62
+      Top = 2
+      Width = 59
+      Align = alLeft
+      BevelInner = bvLowered
+      BevelOuter = bvLowered
+      ClientHeight = 62
+      ClientWidth = 59
+      TabOrder = 2
+      object btnBlock42: TSpeedButton
+        Left = 1
+        Height = 53
+        Top = 4
+        Width = 53
+        Flat = True
+        GroupIndex = 4
+        ImageIndex = 8
+        Transparent = False
+        OnClick = SelecteSourceBlockClick
+        ShowCaption = False
+        ShowHint = True
+        ParentShowHint = False
+      end
+    end
+    object panelTools114: TPanel
+      Left = 415
+      Height = 62
+      Top = 2
+      Width = 59
+      Align = alLeft
+      BevelInner = bvLowered
+      BevelOuter = bvLowered
+      ClientHeight = 62
+      ClientWidth = 59
+      TabOrder = 3
+      object btnBlock43: TSpeedButton
+        Left = 1
+        Height = 53
+        Top = 4
+        Width = 53
+        Flat = True
+        GroupIndex = 4
+        ImageIndex = 7
+        Transparent = False
+        OnClick = SelecteSourceBlockClick
+        ShowCaption = False
+        ShowHint = True
+        ParentShowHint = False
+      end
+    end
+    object panelTools115: TPanel
+      Left = 356
+      Height = 62
+      Top = 2
+      Width = 59
+      Align = alLeft
+      BevelInner = bvLowered
+      BevelOuter = bvLowered
+      ClientHeight = 62
+      ClientWidth = 59
+      TabOrder = 4
+      object btnBlock44: TSpeedButton
+        Left = 1
+        Height = 53
+        Top = 4
+        Width = 53
+        Flat = True
+        GroupIndex = 4
+        ImageIndex = 6
+        Transparent = False
+        OnClick = SelecteSourceBlockClick
+        ShowCaption = False
+        ShowHint = True
+        ParentShowHint = False
+      end
+    end
+    object panelTools116: TPanel
+      Left = 297
+      Height = 62
+      Top = 2
+      Width = 59
+      Align = alLeft
+      BevelInner = bvLowered
+      BevelOuter = bvLowered
+      ClientHeight = 62
+      ClientWidth = 59
+      TabOrder = 5
+      object btnBlock45: TSpeedButton
+        Left = 1
+        Height = 53
+        Top = 4
+        Width = 53
+        Flat = True
+        GroupIndex = 4
+        ImageIndex = 5
+        Transparent = False
+        OnClick = SelecteSourceBlockClick
+        ShowCaption = False
+        ShowHint = True
+        ParentShowHint = False
+      end
+    end
+    object panelTools117: TPanel
+      Left = 238
+      Height = 62
+      Top = 2
+      Width = 59
+      Align = alLeft
+      BevelInner = bvLowered
+      BevelOuter = bvLowered
+      ClientHeight = 62
+      ClientWidth = 59
+      TabOrder = 6
+      object btnBlock46: TSpeedButton
+        Left = 1
+        Height = 53
+        Top = 4
+        Width = 53
+        Flat = True
+        GroupIndex = 4
+        ImageIndex = 4
+        Transparent = False
+        OnClick = SelecteSourceBlockClick
+        ShowCaption = False
+        ShowHint = True
+        ParentShowHint = False
+      end
+    end
+    object panelTools118: TPanel
+      Left = 179
+      Height = 62
+      Top = 2
+      Width = 59
+      Align = alLeft
+      BevelInner = bvLowered
+      BevelOuter = bvLowered
+      ClientHeight = 62
+      ClientWidth = 59
+      TabOrder = 7
+      object btnBlock47: TSpeedButton
+        Left = 1
+        Height = 53
+        Top = 4
+        Width = 53
+        Flat = True
+        GroupIndex = 4
+        ImageIndex = 3
+        Transparent = False
+        OnClick = SelecteSourceBlockClick
+        ShowCaption = False
+        ShowHint = True
+        ParentShowHint = False
+      end
+    end
+    object panelTools119: TPanel
+      Left = 120
+      Height = 62
+      Top = 2
+      Width = 59
+      Align = alLeft
+      BevelInner = bvLowered
+      BevelOuter = bvLowered
+      ClientHeight = 62
+      ClientWidth = 59
+      TabOrder = 8
+      object btnBlock48: TSpeedButton
+        Left = 1
+        Height = 53
+        Top = 4
+        Width = 53
+        Flat = True
+        GroupIndex = 4
+        ImageIndex = 2
+        Transparent = False
+        OnClick = SelecteSourceBlockClick
+        ShowCaption = False
+        ShowHint = True
+        ParentShowHint = False
+      end
+    end
+    object panelTools120: TPanel
+      Left = 61
+      Height = 62
+      Top = 2
+      Width = 59
+      Align = alLeft
+      BevelInner = bvLowered
+      BevelOuter = bvLowered
+      ClientHeight = 62
+      ClientWidth = 59
+      TabOrder = 9
+      object btnBlock49: TSpeedButton
+        Left = 1
+        Height = 53
+        Top = 4
+        Width = 53
+        Flat = True
+        GroupIndex = 4
+        ImageIndex = 1
+        Transparent = False
+        OnClick = SelecteSourceBlockClick
+        ShowCaption = False
+        ShowHint = True
+        ParentShowHint = False
+      end
+    end
   end
-  object shArrowPart3: TShape
-    Left = 80
-    Height = 26
-    Top = 320
-    Width = 57
-    Shape = stTriangleDown
-    Visible = False
-  end
-  object shArrowPart2: TShape
-    Left = 102
-    Height = 20
-    Top = 300
-    Width = 13
-    Visible = False
-  end
-  object shArrowPart1: TShape
-    Left = 66
-    Height = 11
-    Top = 290
-    Width = 49
-    Visible = False
+  object Panel1: TPanel
+    Left = 0
+    Height = 79
+    Top = 429
+    Width = 612
+    Align = alBottom
+    ClientHeight = 79
+    ClientWidth = 612
+    TabOrder = 3
+    object imageSel: TSpeedButton
+      Left = 8
+      Height = 53
+      Top = 8
+      Width = 53
+      Flat = True
+      GroupIndex = 4
+      ImageIndex = 0
+      Transparent = False
+      OnClick = SelecteSourceBlockClick
+      ShowCaption = False
+      ShowHint = True
+      ParentShowHint = False
+    end
+    object shArrowPart1: TShape
+      Left = 66
+      Height = 11
+      Top = 7
+      Width = 49
+      Visible = False
+    end
+    object shArrowPart2: TShape
+      Left = 115
+      Height = 43
+      Top = 7
+      Width = 11
+      Visible = False
+    end
+    object shArrowPart3: TShape
+      Left = 88
+      Height = 43
+      Top = 32
+      Width = 65
+      Shape = stTriangleDown
+      Visible = False
+    end
   end
   object TimerAniShowArrow: TTimer
     Enabled = False

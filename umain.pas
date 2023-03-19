@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, ComCtrls,
   Buttons, StdCtrls, IniFiles, LCLType, Menus, Dos, utypes, uBlockColection,
   uBlockMotionEngine, uControlConfig, uAbstractDrawer, uLoggerOfDrawer,
-  uPSComponent;
+  uPSComponent, ucmdhelp;
 
 const
   STATUSBAR_POSITION_INDEX = 0;
@@ -16,7 +16,7 @@ const
   STATUSBAR_SELECTED_BLOCK_INDEX = 2;
   STATUSBAR_MESSAGES_INDEX = 3;
 
-
+  C_SUBFOLDER_WORLDS = '\data\users\default\worlds\';
 type
 
 
@@ -46,7 +46,14 @@ type
     ImageList: TImageList;
     imageTargetPlace1Pick: TImage;
     ImageToLoad: TImage;
+    lblOptions: TLabel;
     lblShortCuts: TLabel;
+    miLoadWorldAtCursor: TMenuItem;
+    Separator1: TMenuItem;
+    miClearAll: TMenuItem;
+    miLoadWorld: TMenuItem;
+    miSaveWorld: TMenuItem;
+    miMoveByMouse: TMenuItem;
     miSelectBlock9: TMenuItem;
     miSelectBlock8: TMenuItem;
     miSelectBlock7: TMenuItem;
@@ -75,6 +82,7 @@ type
     PanelTop: TPanel;
     pgPlaces: TPageControl;
     pmSelectedBlock: TPopupMenu;
+    pmOptions: TPopupMenu;
     PSScript1: TPSScript;
     StatusBar: TStatusBar;
     TabSheet1: TTabSheet;
@@ -92,7 +100,15 @@ type
     procedure imageBackgroungPlace1Click(Sender: TObject);
     procedure imageBackgroungPlace1MouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure imageBackgroungPlace1MouseMove(Sender: TObject;
+      Shift: TShiftState; X, Y: Integer);
+    procedure lblOptionsClick(Sender: TObject);
     procedure lblShortCutsClick(Sender: TObject);
+    procedure miClearAllClick(Sender: TObject);
+    procedure miLoadWorldAtCursorClick(Sender: TObject);
+    procedure miLoadWorldClick(Sender: TObject);
+    procedure miMoveByMouseClick(Sender: TObject);
+    procedure miSaveWorldClick(Sender: TObject);
     procedure mmCmdChange(Sender: TObject);
     procedure PSScript1Compile(Sender: TPSScript);
     procedure TabSheet1MouseDown(Sender: TObject; Button: TMouseButton;
@@ -101,6 +117,9 @@ type
     procedure Timer1Timer(Sender: TObject);
     procedure TimerLimitTimer(Sender: TObject);
   private
+    MouseNav: record
+      LastX, LastY: Integer;
+    end;
     FoLastMoveKind: TMoveActionKind;
     FbBlocked: Boolean;
 
@@ -110,18 +129,29 @@ type
     FnTimeRemail: integer;
     FMenuButtonsList: TArrayOfSpeedButton;
 
+    FoCurrentLoadingFile: TIniFile;
+    FoCurrentSavingFile: TIniFile;
+    FoCurrentBlockNameDictionary: TStringList;
+    FoCurrentSavingObjectCount: integer;
+
     procedure goHome;
+    procedure loadWorldAtCursor(const xini, yini, zini: integer);
+    procedure goToPosition(const x, y, z: integer);
     procedure BlockMotionEngineMove(Sender: TMotionBlockControl; const x,y,z: integer);
     procedure BlockMotionEnginePut(Sender: TMotionBlockControl; const index: integer);
     procedure BlockMotionEngineLog(Sender: TMotionBlockControl; const msg: string);
     procedure BlockMotionEngineMoveBlock(Sender: TMotionBlockControl;
+      const x,y,z: integer; const effect: String);
+    procedure BlockMotionEngineMoveBlockWithOutCursor(Sender: TMotionBlockControl;
       const x,y,z: integer; const effect: String);
 
 
     procedure updateTargetImagePosition;
     procedure loadTexts;
     procedure loadPictures;
+    function addPicture(const sFileName: string; testDuplication: boolean): integer;
     procedure FormKeyDownPlace1(var Key: Word; Shift: TShiftState);
+    procedure FormDirectionPlace1(direction: TDirection; Shift: TShiftState);
     procedure updateSelectedBlock(const index: integer; blocksImageList: TImageList);
     procedure initMotion(b: Tblock);
     procedure putNewBlock(const alowMotion: boolean);
@@ -132,7 +162,10 @@ type
     procedure addImageBlockToImageList(filepath: string; aList:TImageList);
     procedure callInventory;
     procedure BlockColectionVisitEventSalveToFile(sender: TObject; block: TBlock);
-    procedure BlockColectionVisitEventLoadFromFile(sender: TObject; block: TBlock);
+    procedure BlockColectionVisitDeleteAll(sender: TObject; block: TBlock);
+    function CalculateFullFileNameToSavedWorls(const sName: string): string;
+
+    procedure ExecCmd(const cmd: string);
   protected
     function getMessage(const messageId, messageDefault: String): String;
     procedure handleNewZomm(const newZomm: integer);
@@ -151,7 +184,7 @@ implementation
 {$R *.lfm}
 
 uses
-  uInventory;
+  uInventory, uLoadWorls;
 
 
 { TfrmGame }
@@ -167,6 +200,29 @@ begin
   finally
     inifile.Free;
   end;
+end;
+
+function TfrmGame.addPicture(const sFileName: string; testDuplication: boolean): integer;
+var
+  i: integer;
+begin
+  if testDuplication then
+  begin
+    for i := Low(FoDrawer.FBlockSourceFileNames) to High(FoDrawer.FBlockSourceFileNames) do
+    begin
+      if FoDrawer.FBlockSourceFileNames[i] = sFileName then
+        exit(i);
+    end;
+  end;
+  SetLength(FoDrawer.FBlockSourceFileNames, Length(FoDrawer.FBlockSourceFileNames) + 1);
+  i := High(FoDrawer.FBlockSourceFileNames);
+  FoDrawer.FBlockSourceFileNames[i] := sFileName;
+  addImageBlockToImageList(FoDrawer.FBlockSourceFileNames[i], ImageListBlocksMenu);
+  addImageBlockToImageList(FoDrawer.FBlockSourceFileNames[i], inventoryImageList);
+
+  mmCmd.Lines.Add('log: block filie loaded: ' + FoDrawer.FBlockSourceFileNames[i] + ' in index ' + IntToStr(i));
+
+  exit(i);
 end;
 
 
@@ -193,13 +249,7 @@ begin
   FindFirst (blocksFolder + '*.png', Attribute, SearchResult);
   while (DosError = 0) do
   begin
-    SetLength(FoDrawer.FBlockSourceFileNames, Length(FoDrawer.FBlockSourceFileNames) + 1);
-    i := High(FoDrawer.FBlockSourceFileNames);
-    FoDrawer.FBlockSourceFileNames[i] := blocksFolder + SearchResult.Name;
-    addImageBlockToImageList(FoDrawer.FBlockSourceFileNames[i], ImageListBlocksMenu);
-    addImageBlockToImageList(FoDrawer.FBlockSourceFileNames[i], inventoryImageList);
-
-    mmCmd.Lines.Add('log: block filie loaded: ' + FoDrawer.FBlockSourceFileNames[i] + ' in index ' + IntToStr(i));
+    addPicture(blocksFolder + SearchResult.Name, false);
     FindNext(SearchResult);
   end;
   FindClose(SearchResult);
@@ -219,13 +269,23 @@ end;
 procedure TfrmGame.FormKeyDownPlace1(var Key: Word; Shift: TShiftState);
 var
   direction: TDirection;
+  initZ: integer;
+begin
+  direction := FoDrawer.FControlPlace1.decodeDirectionByKey(true, Key);
+
+  FormDirectionPlace1(direction, Shift);
+end;
+
+
+
+procedure TfrmGame.FormDirectionPlace1(direction: TDirection; Shift: TShiftState);
+var
   CtrlPressed: boolean;
   initZ: integer;
 begin
   initZ := FoDrawer.FnCurrentPlacePositionZ;
 
   CtrlPressed := ssCtrl in Shift;
-  direction := FoDrawer.FControlPlace1.decodeDirectionByKey(true, Key);
 
   if direction = dirNone then
      exit;
@@ -309,6 +369,8 @@ begin
 
 end;
 
+
+
 procedure TfrmGame.updateSelectedBlock(const index: integer;
   blocksImageList: TImageList);
 begin
@@ -323,13 +385,21 @@ end;
 procedure TfrmGame.initMotion(b: Tblock);
 var
   s: string;
+  events: TMotionBlockControlEventsParam;
+
 begin
   try
     s := b.FsFileName + '.pas';
     if FileExists(s) then
     begin
-      TBlockMotionEngine.insert(b, s, @BlockMotionEngineMove, @BlockMotionEnginePut,
-        @BlockMotionEngineMoveBlock);
+
+      events.oEventMove := @BlockMotionEngineMove;
+      events.oEventPut := @BlockMotionEnginePut;
+      events.oEventMoveBlock := @BlockMotionEngineMoveBlock;
+      events.oEventMoveBlockWithOutCursor := @BlockMotionEngineMoveBlockWithOutCursor;
+
+
+      TBlockMotionEngine.insertWithThread(b, s, events);
     end;
   except
     on e:Exception do
@@ -427,6 +497,7 @@ begin
   path := ExtractFilePath(Application.ExeName) + 'data\TimeLimit.ini';
   oIni := TIniFile.Create(path);
   try
+
     limit := IntToStr(FnTimeRemail div 60);
     oIni.WriteString('TotalByDate', DateToStr(Date), limit);
   finally
@@ -510,17 +581,6 @@ begin
     FMenuButtonsList);
 end;
 
-procedure TfrmGame.BlockColectionVisitEventSalveToFile(sender: TObject;
-  block: TBlock);
-begin
-  //
-end;
-
-procedure TfrmGame.BlockColectionVisitEventLoadFromFile(sender: TObject;
-  block: TBlock);
-begin
-  //
-end;
 
 
 function TfrmGame.getMessage(const messageId, messageDefault: String): String;
@@ -577,6 +637,10 @@ procedure TfrmGame.FormCreate(Sender: TObject);
 var
   i: integer;
 begin
+
+  MouseNav.LastX := -1;
+  MouseNav.LastY := -1;
+
   FoDrawer := TAbstractDrawer.Create;
   FoLoggerOfDrawer := TLoggerOfDrawer.Create;
   FoLoggerOfDrawer.FoLogger := mmCmd;
@@ -639,6 +703,8 @@ end;
 
 procedure TfrmGame.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
+var
+  cmd: string;
 begin
   FormKeyDownPlace1(Key, Shift);
 
@@ -655,6 +721,12 @@ begin
   begin
     goHome;
   end
+  else if key = VK_C then
+  begin
+    if InputQuery('Command', 'Type a comand ou h por help', cmd) then
+      ExecCmd(cmd);
+
+  end
   else if key = VK_H then
   begin
     btnInsert.Click;
@@ -670,6 +742,10 @@ begin
   else if key = 190 {VK_POINT} then
   begin
     btnSelectedBlockClick(self);
+  end
+  else if key = 79 {'o'} then
+  begin
+    lblOptionsClick(self);
   end
   else
     handleBlockSelection(key);
@@ -688,8 +764,322 @@ begin
   putNewBlock(true);
 end;
 
+procedure TfrmGame.imageBackgroungPlace1MouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+var
+  dX, dY: integer;
+  dirX, dirY: TDirection;
+begin
+  //to move the position
+  if not miMoveByMouse.Checked then
+    exit;
+
+  //compare with last mouse position to indicate the direction
+
+  if (MouseNav.LastX >= 0) and (MouseNav.LastY >= 0) then
+  begin
+    dX := X - MouseNav.LastX;
+    dY := Y - MouseNav.LastY;
+
+    dirX := dirRight;
+    if dX < 0 then
+      dirX := dirLeft;
+
+    dirY := dirDown;
+    if dY < 0 then
+      dirY := dirUp;
+
+    dX := Abs(dX div FoDrawer.FoCurrentPlaceImageTarget.Width);
+    dY := Abs(dY div FoDrawer.FoCurrentPlaceImageTarget.Width);
+
+    while dX > 0 do
+    begin
+      MouseNav.LastX := X;
+      FormDirectionPlace1(dirX, Shift);
+      Dec(dX);
+    end;
+
+    while dY > 0 do
+    begin
+      MouseNav.LastY := Y;
+      FormDirectionPlace1(dirY, Shift);
+      Dec(dY);
+    end;
+  end
+  else
+  begin
+    MouseNav.LastX := X;
+    MouseNav.LastY := Y;
+  end;
+
+end;
+
+procedure TfrmGame.lblOptionsClick(Sender: TObject);
+begin
+  pmOptions.PopUp;
+end;
+
 procedure TfrmGame.lblShortCutsClick(Sender: TObject);
 begin
+
+end;
+
+procedure TfrmGame.miClearAllClick(Sender: TObject);
+begin
+  FoDrawer.FoCurrentPlaceBlockCollection.deleteAll(@BlockColectionVisitDeleteAll);
+end;
+
+procedure TfrmGame.miLoadWorldAtCursorClick(Sender: TObject);
+begin
+  loadWorldAtCursor(FoDrawer.FnCurrentPlacePositionX,
+    FoDrawer.FnCurrentPlacePositionY,
+    FoDrawer.FnCurrentPlacePositionZ);
+end;
+
+procedure TfrmGame.miLoadWorldClick(Sender: TObject);
+begin
+  loadWorldAtCursor(0, 0, 0);
+end;
+
+procedure TfrmGame.miMoveByMouseClick(Sender: TObject);
+begin
+  miMoveByMouse.Checked := not miMoveByMouse.Checked;
+  if miMoveByMouse.Checked then
+  begin
+    MouseNav.LastX := -1;
+    MouseNav.LastY := -1;
+  end;
+end;
+
+
+procedure TfrmGame.BlockColectionVisitEventSalveToFile(sender: TObject;
+  block: TBlock);
+var
+  blockImageIndex: integer;
+
+begin
+  blockImageIndex := FoCurrentBlockNameDictionary.IndexOf(block.FsFileName);
+  if blockImageIndex < 0 then
+  begin
+    blockImageIndex := FoCurrentBlockNameDictionary.Add(block.FsFileName);
+    FoCurrentSavingFile.WriteString('block', IntToStr(blockImageIndex), block.FsFileName);
+    FoCurrentSavingFile.WriteInteger('count', 'block', FoCurrentBlockNameDictionary.Count);
+  end;
+
+  FoCurrentSavingFile.WriteString('object', IntToStr(FoCurrentSavingObjectCount),
+    Format('v0,%d,%d,%d,%d', [block.FnX, block.FnY, block.FnZ, blockImageIndex]));
+
+  FoCurrentSavingObjectCount := FoCurrentSavingObjectCount + 1;
+end;
+
+procedure TfrmGame.BlockColectionVisitDeleteAll(sender: TObject;
+  block: TBlock);
+begin
+  goToPosition(block.FnX, block.FnY, block.FnZ);
+  pickBlock;
+  block.Free;
+end;
+
+ function TfrmGame.CalculateFullFileNameToSavedWorls(const sName: string): string;
+begin
+  Result := ExtractFilePath(Application.ExeName) + C_SUBFOLDER_WORLDS
+    + sName + '.World.ini';
+end;
+
+
+ procedure TfrmGame.ExecCmd(const cmd: string);
+ var
+   c: string;
+   sl: TStringList;
+   val, dir, x, y, z, i, col, row: integer;
+
+   procedure posxy(px, py: integer);
+   begin
+     FoDrawer.FnCurrentPlacePositionX := px;
+     FoDrawer.FnCurrentPlacePositionY := py;
+     FoDrawer.FnCurrentPlacePositionZ := z;
+
+     updateTargetImagePosition;
+     FoLastMoveKind := makMove;
+
+   end;
+
+   procedure cmdc(lenght: integer);
+   begin
+     dir := 1;
+     val := lenght;
+     if val < 0 then
+     begin
+       dir := -1;
+       val := val * -1;
+     end;
+
+     i := 0;
+     while ((dir = 1) and (i < val)) or ((dir = -1) and (i > (val * -1))) do
+     begin
+       posxy(x, y + i);
+       try
+       //initMotion(
+       FoDrawer.putNewBlock(imageTargetPlace1hand);
+       //);
+
+
+       except
+         on e: exception do
+           mmCmd.Lines.Add('Error executing command: ' + e.message);
+       end;
+       i := i + dir;
+     end;
+     posxy(x, y + i);
+
+   end;
+
+   procedure cmdr(lenght: integer);
+   begin
+     dir := 1;
+     val := lenght;
+     if val < 0 then
+     begin
+       dir := -1;
+       val := val * -1;
+     end;
+
+     i := 0;
+     while ((dir = 1) and (i < val)) or ((dir = -1) and (i > (val * -1))) do
+     begin
+       posxy(x + i, y);
+       try
+       //initMotion(
+       FoDrawer.putNewBlock(imageTargetPlace1hand);
+       //);
+       except
+         on e: exception do
+           mmCmd.Lines.Add('Error executing command: ' + e.message);
+       end;
+       i := i + dir;
+     end;
+     posxy(x + i, y);
+
+   end;
+
+
+ begin
+   if cmd = 'h' then
+   begin
+     frmCmdHelp.Visible := true;
+     frmCmdHelp.Show;
+     if not InputQuery('Comamnd', 'enter a new command', c) then
+       exit;
+   end
+   else
+     c := cmd;
+
+   sl := TStringList.Create;
+   sl.Delimiter := ' ';
+   try
+      while true do
+      begin
+        sl.DelimitedText := c;
+
+        x := FoDrawer.FnCurrentPlacePositionX;
+        y := FoDrawer.FnCurrentPlacePositionY;
+        z := FoDrawer.FnCurrentPlacePositionZ;
+
+        if sl[0] = 'r' then
+        begin
+          cmdr(StrToIntDef(sl[1], 0));
+        end
+
+
+        else if sl[0] = 'c' then
+        begin
+          cmdc(StrToIntDef(sl[1], 0));
+        end
+        else if (sl[0] = 'rec') and (sl.Count > 3) and (sl[3] = 'fill') then
+        begin
+          for col := 0 to StrToIntDef(sl[1], 0) - 1 do //columns
+          begin
+            try
+              for row := 0 to StrToIntDef(sl[2], 0) - 1 do //rows
+              begin
+                posxy(x + col, y + row);
+                try
+                  //initMotion(
+                  FoDrawer.putNewBlock(imageTargetPlace1hand);
+                  //);
+                except
+                  on e: exception do
+                    mmCmd.Lines.Add('Error executing command: ' + e.message);
+                end;
+
+              end;
+            except
+              on e: exception do
+                mmCmd.Lines.Add('Error executing command: ' + e.message);
+            end;
+
+            posxy(x + col + 1, y);
+          end;
+        end
+        else if (sl[0] = 'rec') and (sl.Count < 4) then
+        begin
+          col := StrToIntDef(sl[1], 0); //columns
+          row := StrToIntDef(sl[2], 0); //rows
+
+          cmdr(col);
+
+          posxy(x + col - 1, y + 1);
+          x := x + col - 1;
+          y := y + 1;
+
+          cmdc(row - 1);
+
+          posxy(x - 1, y + row - 2);
+          x := x - 1;
+          y := y + row - 2;
+
+          cmdr((col - 1) * -1);
+
+          posxy(x - col + 2, y - 1);
+          x := x - col + 2;
+          y := y - 1;
+
+          cmdc((row - 2) * -1);
+
+          posxy(x + col, y - row + 2);
+
+        end
+        else
+          ShowMessage('Invalid Command.');
+
+        if not InputQuery('Comamnd', 'enter a new command', c) then
+          exit;
+      end;
+   finally
+     sl.Free;
+   end;
+
+ end;
+
+
+procedure TfrmGame.miSaveWorldClick(Sender: TObject);
+var
+  sName: String;
+begin
+  if not inputQuery('Save world', 'Enter the world name:', sName) then
+    exit;
+  FoCurrentSavingObjectCount := 0;
+  FoCurrentSavingFile := TIniFile.Create(CalculateFullFileNameToSavedWorls(sName));
+  FoCurrentBlockNameDictionary := TStringList.Create;
+  try
+    FoDrawer.FoCurrentPlaceBlockCollection.visitAll(@BlockColectionVisitEventSalveToFile);
+    FoCurrentSavingFile.WriteInteger('count', 'object', FoCurrentSavingObjectCount);
+
+  finally
+    FoCurrentBlockNameDictionary.Free;
+    FoCurrentSavingFile.Free;
+  end;
+
 
 end;
 
@@ -820,9 +1210,83 @@ end;
 
 procedure TfrmGame.goHome;
 begin
-  FoDrawer.FnCurrentPlacePositionX := 0;
-  FoDrawer.FnCurrentPlacePositionY := 0;
-  FoDrawer.FnCurrentPlacePositionZ := 0;
+  goToPosition(0, 0, 0);
+end;
+
+procedure TfrmGame.loadWorldAtCursor(const xini, yini, zini: integer);
+var
+  sName, sImageName, sObject: string;
+  i, x, y, z, index, imageIndex, blockCount, objectCount: integer;
+  sl: TStringList;
+begin
+  if not TfrmLoadWorld.Execute(sName) then
+    exit;
+
+  sName := ExtractFilePath(Application.ExeName) + C_SUBFOLDER_WORLDS + sName;
+
+  if not FileExists(sName) then
+    raise Exception.CreateFmt('File not exists: %s', [sName]);
+
+  FoCurrentLoadingFile := TIniFile.Create(sName);
+  FoCurrentBlockNameDictionary := TStringList.Create;
+  sl := TStringList.Create;
+  mmCmd.Lines.BeginUpdate;
+  try
+    blockCount :=
+      FoCurrentLoadingFile.ReadInteger('count', 'block',
+        FoCurrentBlockNameDictionary.Count);
+
+    for i := 0 to blockCount - 1 do
+    begin
+      sImageName := FoCurrentLoadingFile.ReadString('block', IntToStr(i), '');
+      if sImageName = '' then
+        continue;
+      imageIndex := addPicture(sImageName, true);
+      FoCurrentBlockNameDictionary.Values[IntToStr(i)] := IntToStr(imageIndex);
+    end;
+
+    objectCount := FoCurrentLoadingFile.ReadInteger('count', 'object', 0);
+    for i := 0 to objectCount - 1 do
+    begin
+
+      sObject := FoCurrentLoadingFile.ReadString('object', IntToStr(i), '');
+      if sObject = '' then
+        continue;
+      sl.CommaText := sObject;
+      if (sl[0] = 'v0') and (sl.Count >= 5) then
+      begin
+        x := StrToIntDef(sl[1], 0);
+        y := StrToIntDef(sl[2], 0);
+        z := StrToIntDef(sl[3], 0);
+        index := StrToIntDef(sl[4], 0);
+
+        imageIndex := StrToIntDef(FoCurrentBlockNameDictionary.Values[IntToStr(index)], 0);
+        FoDrawer.FnSelectedBlockIndex := imageIndex;
+        try
+          goToPosition(xini + x, yini + y, zini + z);
+          FoDrawer.putNewBlock(imageTargetPlace1hand);
+        except
+          on E:Exception do
+            mmCmd.Lines.Add('log: Error putting new block on load world context: '
+              + E.Message);
+        end;
+      end;
+
+    end;
+  finally
+    mmCmd.Lines.EndUpdate;
+    sl.Free;
+    FoCurrentBlockNameDictionary.Free;
+    FoCurrentLoadingFile.Free;
+  end;
+
+end;
+
+procedure TfrmGame.goToPosition(const x, y, z: integer);
+begin
+  FoDrawer.FnCurrentPlacePositionX := x;
+  FoDrawer.FnCurrentPlacePositionY := y;
+  FoDrawer.FnCurrentPlacePositionZ := z;
   updateTargetImagePosition;
   FoLastMoveKind := makMove;
 end;
@@ -833,6 +1297,13 @@ begin
   FoDrawer.FnCurrentPlacePositionX := x;
   FoDrawer.FnCurrentPlacePositionY := y;
   FoDrawer.FnCurrentPlacePositionZ := z;
+
+  if Sender <> nil then
+  begin
+    Sender.FnCurrentX:= FoDrawer.FnCurrentPlacePositionX;
+    Sender.FnCurrentY:= FoDrawer.FnCurrentPlacePositionY;
+    Sender.FnCurrentZ:= FoDrawer.FnCurrentPlacePositionZ;
+  end;
   updateTargetImagePosition;
   FoLastMoveKind := makMove;
 end;
@@ -848,6 +1319,10 @@ begin
         updateSelectedBlock(index,
           ImageListBlocksMenu);
 
+        Sender.FnCurrentX:= FoDrawer.FnCurrentPlacePositionX;
+        Sender.FnCurrentY:= FoDrawer.FnCurrentPlacePositionY;
+        Sender.FnCurrentZ:= FoDrawer.FnCurrentPlacePositionZ;
+
         putNewBlock(false);
       end;
     end;
@@ -860,20 +1335,42 @@ end;
 procedure TfrmGame.BlockMotionEngineLog(Sender: TMotionBlockControl;
   const msg: string);
 begin
-  mmCmd.Lines.Add('log: from motion block ID ' + IntToStr(Sender.FnId)
-    + ' => ' + msg);
+  if sender = nil then
+    mmCmd.Lines.Add('log: ' + msg)
+  else
+    mmCmd.Lines.Add('log: from motion block ID ' + IntToStr(Sender.FnId)
+      + ' at (' + IntToStr(sender.FnCurrentX) + ',' + IntToStr(sender.FnCurrentY)
+      + ',' + IntToStr(sender.FnCurrentZ) + ') => ' + msg);
 end;
 
 procedure TfrmGame.BlockMotionEngineMoveBlock(Sender: TMotionBlockControl;
   const x, y, z: integer; const effect: String);
 begin
+
   FoDrawer.FnCurrentPlacePositionX := x;
   FoDrawer.FnCurrentPlacePositionY := y;
   FoDrawer.FnCurrentPlacePositionZ := Z;
 
   updateTargetImagePosition;
 
+  Sender.FnCurrentX:= FoDrawer.FnCurrentPlacePositionX;
+  Sender.FnCurrentY:= FoDrawer.FnCurrentPlacePositionY;
+  Sender.FnCurrentZ:= FoDrawer.FnCurrentPlacePositionZ;
+
   FoDrawer.moveBlock(Sender.FoBlock, effect);
+end;
+
+procedure TfrmGame.BlockMotionEngineMoveBlockWithOutCursor(
+  Sender: TMotionBlockControl; const x, y, z: integer; const effect: String);
+begin
+  updateTargetImagePosition;
+
+  FoDrawer.moveBlockToWithoutCursor(Sender.FoBlock, x, y, z, effect);
+
+  Sender.FnCurrentX:= x;
+  Sender.FnCurrentY:= y;
+  Sender.FnCurrentZ:= z;
+
 end;
 
 end.

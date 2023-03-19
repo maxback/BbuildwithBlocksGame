@@ -1,0 +1,4 @@
+Error inserting motion block with script C:\git\BbuildwithBlocksGame\images\blocks\n.png.pas. count: 3
+[Hint] (11:3): Variable 'XB' never used
+[Hint] (11:3): Variable 'YB' never used
+[Hint] (11:3): Variable 'ZB' never used

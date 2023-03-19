@@ -80,13 +80,26 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="uBlockMotionEngine"/>
       </Unit>
+      <Unit>
+        <Filename Value="uloadworls.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmLoadWorld"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="ucmdhelp.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmCmdHelp"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
     <Version Value="11"/>
     <PathDelim Value="\"/>
     <Target>
-      <Filename Value="BuildWithBlocksGame"/>
+      <Filename Value="BuildWithBlocksGameDebug"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
