@@ -22,7 +22,7 @@ type
       function find(x, y, z: integer): TBlock;
       function findMaxZ(x, y, defaultZ: integer): TBlock;
       procedure visitAll(visitCallback: TBlockColectionVisitEvent);
-      procedure deleteAll(visitCallback: TBlockColectionVisitEvent);
+      procedure deleteAll(visitCallback: TBlockColectionVisitEvent; const freeBlock: boolean);
       constructor create;
       destructor destroy; override;
 
@@ -100,12 +100,23 @@ begin
   end;
 end;
 
-procedure TBlockColection.deleteAll(visitCallback: TBlockColectionVisitEvent);
+procedure TBlockColection.deleteAll(visitCallback: TBlockColectionVisitEvent; const freeBlock: boolean);
+var
+  block: TBlock;
 begin
+  if not Assigned(FBlockList) then
+    exit;
+
   while FBlockList.Count > 0 do
   begin
     if Assigned(visitCallback) then
-      visitCallback(self, FBlockList.Objects[0] as TBlock);
+      visitCallback(self, FBlockList.Objects[0] as TBlock)
+    else if freeBlock then
+    begin
+      block := TBlock(FBlockList.Objects[0]);
+      block.Free;
+    end;
+
     FBlockList.Delete(0);
   end;
 end;

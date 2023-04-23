@@ -91,7 +91,21 @@
         <Filename Value="ucmdhelp.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmCmdHelp"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="ucanvasdrawer.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uCanvasDrawer"/>
+      </Unit>
+      <Unit>
+        <Filename Value="upreviewopenfile.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmPreviewOpenFile"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="uPreviewOpenFile"/>
       </Unit>
     </Units>
   </ProjectOptions>

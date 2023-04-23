@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, ComCtrls,
   Buttons, StdCtrls, IniFiles, LCLType, Menus, Dos, utypes, uBlockColection,
   uBlockMotionEngine, uControlConfig, uAbstractDrawer, uLoggerOfDrawer,
-  uPSComponent, ucmdhelp;
+  uPSComponent, ucmdhelp, Math, uPreviewOpenFile, fileutil, ShellApi;
 
 const
   STATUSBAR_POSITION_INDEX = 0;
@@ -17,6 +17,12 @@ const
   STATUSBAR_MESSAGES_INDEX = 3;
 
   C_SUBFOLDER_WORLDS = '\data\users\default\worlds\';
+  C_SUBFOLDER_IMAGES = '\images\';
+
+  C_EXT_METADATA_FILE = '.Metadata.ini';
+  C_EXT_WORLD_FILE = '.World.ini';
+
+  C_BLOCK_MODEL_NAME = 'block_model.PNG';
 type
 
 
@@ -46,8 +52,13 @@ type
     ImageList: TImageList;
     imageTargetPlace1Pick: TImage;
     ImageToLoad: TImage;
+    lblSavedPoints: TLabel;
     lblOptions: TLabel;
     lblShortCuts: TLabel;
+    miSaveAsBlock: TMenuItem;
+    midiv: TMenuItem;
+    miEnableLogsAnimatedBlocks: TMenuItem;
+    miShowLastErrorsFromMotionBlock: TMenuItem;
     miLoadWorldAtCursor: TMenuItem;
     Separator1: TMenuItem;
     miClearAll: TMenuItem;
@@ -88,6 +99,7 @@ type
     TabSheet1: TTabSheet;
     tbZoom: TTrackBar;
     Timer1: TTimer;
+    TimerAutoSave: TTimer;
     TimerLimit: TTimer;
     procedure btnInsertClick(Sender: TObject);
     procedure btnPickClick(Sender: TObject);
@@ -105,23 +117,29 @@ type
     procedure lblOptionsClick(Sender: TObject);
     procedure lblShortCutsClick(Sender: TObject);
     procedure miClearAllClick(Sender: TObject);
+    procedure miEnableLogsAnimatedBlocksClick(Sender: TObject);
     procedure miLoadWorldAtCursorClick(Sender: TObject);
     procedure miLoadWorldClick(Sender: TObject);
     procedure miMoveByMouseClick(Sender: TObject);
+    procedure miSaveAsBlockClick(Sender: TObject);
     procedure miSaveWorldClick(Sender: TObject);
+    procedure miShowLastErrorsFromMotionBlockClick(Sender: TObject);
     procedure mmCmdChange(Sender: TObject);
     procedure PSScript1Compile(Sender: TPSScript);
     procedure TabSheet1MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure tbZoomChange(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
+    procedure TimerAutoSaveTimer(Sender: TObject);
     procedure TimerLimitTimer(Sender: TObject);
   private
+    FsAutoSaveName: string;
     MouseNav: record
       LastX, LastY: Integer;
     end;
     FoLastMoveKind: TMoveActionKind;
     FbBlocked: Boolean;
+    FoLastBlock: Tblock;
 
     FoDrawer: TAbstractDrawer;
     FoLoggerOfDrawer: TLoggerOfDrawer;
@@ -134,9 +152,19 @@ type
     FoCurrentBlockNameDictionary: TStringList;
     FoCurrentSavingObjectCount: integer;
 
+    FslSavedPoints: TStringList;
+
+    function handleDirectKeysOnPlace(Sender: TObject; var Key: Word; Shift: TShiftState): boolean;
+
     procedure goHome;
+    procedure loadMetadata(b: Tblock);
     procedure loadWorldAtCursor(const xini, yini, zini: integer);
-    procedure goToPosition(const x, y, z: integer);
+    procedure loadWorldFromFileAtCursor(const sName: string; const xini, yini, zini: integer);
+    procedure goToPosition(const x, y, z: integer); overload;
+    procedure goToPosition(const pointStr: string);
+
+    procedure DefineSavedPointsTextValue(const key, value: string);
+
     procedure BlockMotionEngineMove(Sender: TMotionBlockControl; const x,y,z: integer);
     procedure BlockMotionEnginePut(Sender: TMotionBlockControl; const index: integer);
     procedure BlockMotionEngineLog(Sender: TMotionBlockControl; const msg: string);
@@ -145,6 +173,8 @@ type
     procedure BlockMotionEngineMoveBlockWithOutCursor(Sender: TMotionBlockControl;
       const x,y,z: integer; const effect: String);
 
+    procedure executeCommandBuildUp(const offset: integer; const p0, p1: string;
+      const updateSavedPoints: boolean);
 
     procedure updateTargetImagePosition;
     procedure loadTexts;
@@ -154,18 +184,20 @@ type
     procedure FormDirectionPlace1(direction: TDirection; Shift: TShiftState);
     procedure updateSelectedBlock(const index: integer; blocksImageList: TImageList);
     procedure initMotion(b: Tblock);
+    procedure openLastErrorLastBlock;
     procedure putNewBlock(const alowMotion: boolean);
     procedure pickBlock;
     procedure InitTimeLimit;
     procedure UpdateTimeLimit;
-    procedure handleBlockSelection(key: Word);
+    function handleBlockSelection(key: Word): boolean;
     procedure addImageBlockToImageList(filepath: string; aList:TImageList);
     procedure callInventory;
     procedure BlockColectionVisitEventSalveToFile(sender: TObject; block: TBlock);
     procedure BlockColectionVisitDeleteAll(sender: TObject; block: TBlock);
-    function CalculateFullFileNameToSavedWorls(const sName: string): string;
+    function CalculateFullFileNameToSavedWorls(const sName: string; const block: boolean): string;
 
     procedure ExecCmd(const cmd: string);
+    procedure SaveWorld(const sName: string; const block: boolean = false);
   protected
     function getMessage(const messageId, messageDefault: String): String;
     procedure handleNewZomm(const newZomm: integer);
@@ -283,7 +315,7 @@ var
   CtrlPressed: boolean;
   initZ: integer;
 begin
-  initZ := FoDrawer.FnCurrentPlacePositionZ;
+  initZ := FoDrawer.CurrentPlacePositionZ;
 
   CtrlPressed := ssCtrl in Shift;
 
@@ -306,7 +338,7 @@ begin
 
     dirUp: begin
       statusMessage('moveUp', 'Moving target to Up');
-      FoDrawer.FnCurrentPlacePositionY := FoDrawer.FnCurrentPlacePositionY + 1;
+      FoDrawer.CurrentPlacePositionY := FoDrawer.FnCurrentPlacePositionY + 1;
     end;
     dirDown: begin
       if FoDrawer.FnCurrentPlacePositionY <= 0 then
@@ -315,7 +347,7 @@ begin
       FoDrawer.FnCurrentPlacePositionY := FoDrawer.FnCurrentPlacePositionY - 1;
     end;
     dirLeft: begin
-      if FoDrawer.FnCurrentPlacePositionX <= 0 then
+      if FoDrawer.CurrentPlacePositionX <= 0 then
         exit;
       statusMessage('moveLeft', 'Moving target to Left');
       FoDrawer.FnCurrentPlacePositionX := FoDrawer.FnCurrentPlacePositionX - 1;
@@ -403,6 +435,48 @@ begin
     end;
   except
     on e:Exception do
+      mmCmd.Lines.Add('log: Error inserting motion in block: ' + E.message);
+  end;
+end;
+
+
+procedure TfrmGame.loadMetadata(b: Tblock);
+var
+  sName: string;
+begin
+  try
+    sName := b.FsFileName + C_EXT_METADATA_FILE;
+    if FileExists(sName) then
+    begin
+
+      loadWorldFromFileAtCursor(sName, FoDrawer.FnCurrentPlacePositionX,
+          FoDrawer.FnCurrentPlacePositionY,
+              FoDrawer.FnCurrentPlacePositionZ);
+    end;
+  except
+    on e:Exception do
+      mmCmd.Lines.Add('log: Error inserting mtadata in block: ' + E.message);
+  end;
+end;
+
+
+procedure TfrmGame.openLastErrorLastBlock;
+var
+  s: string;
+begin
+  if FoLastBlock = nil then
+    exit;
+  try
+    s := FoLastBlock.FsFileName + '.pas.ErrorList.txt';
+    if FileExists(s) then
+    begin
+      mmCmd.Lines.LoadFromFile(s);
+      DeleteFile(s);
+    end
+    else
+      ShowMessage('Error List File now exists.');
+  except
+    on e:Exception do
       mmCmd.Lines.Add('log: Error inserting motion block: ' + E.message);
   end;
 end;
@@ -426,8 +500,14 @@ begin
     FoLastMoveKind := makMoveAfterInsert;
     updateTargetImagePosition;
 
+    FoLastBlock := b;
+
+    loadMetadata(b);
+
     if alowMotion then
       initMotion(b);
+
+    TBlockMotionEngine.notifyBlockMove(b, b.FnX, b.FnY, b.FnZ, b.FnX, b.FnY, b.FnZ);
   finally
     updateSelectedBlock(index,
       ImageListBlocksMenu as TImageList);
@@ -442,6 +522,12 @@ begin
     ShowMessage('You have no time!!!!! Only basic commands are avilable!');
     exit;
   end;
+
+ TBlockMotionEngine.notifyBlockKill(
+   FoDrawer.FoCurrentPlaceBlockCollection.find(FoDrawer.FnCurrentPlacePositionX,
+    FoDrawer.FnCurrentPlacePositionY, FoDrawer.FnCurrentPlacePositionZ),
+    FoDrawer.FnCurrentPlacePositionX, FoDrawer.FnCurrentPlacePositionY,
+    FoDrawer.FnCurrentPlacePositionZ);
 
  FoDrawer.pickBlock;
  FoLastMoveKind := makMoveAfterPick;
@@ -504,8 +590,7 @@ begin
     oIni.Free;
   end;
 end;
-
-procedure TfrmGame.handleBlockSelection(key: Word);
+function TfrmGame.handleBlockSelection(key: Word): boolean;
 var
   componentName: string;
   oComponent: TComponent;
@@ -524,13 +609,17 @@ begin
     VK_8: charKey := '8';
     VK_9: charKey := '9';
   else
-    exit;
+    exit(false);
   end;
   componentName := 'btnBlock' + charKey;
   oComponent := FindComponent(componentName);
   if oComponent <> nil then
+  begin
     btnSelectBlockClick(oComponent);
-    //(oComponent as TSpeedButton).Click;
+    exit(true);
+  end;
+
+  exit(false);
 end;
 
 procedure TfrmGame.addImageBlockToImageList(filepath: string;
@@ -632,12 +721,13 @@ begin
   //desenha com base apenas na entrada de texto
 end;
 
-
 procedure TfrmGame.FormCreate(Sender: TObject);
 var
   i: integer;
 begin
-
+  lblShortCuts.Hint := lblShortCuts.Caption;
+  FslSavedPoints := TStringList.Create;
+  DefineSavedPointsTextValue('home', '0 0 0');
   MouseNav.LastX := -1;
   MouseNav.LastY := -1;
 
@@ -646,7 +736,10 @@ begin
   FoLoggerOfDrawer.FoLogger := mmCmd;
   FoDrawer.setNextDrawer(FoLoggerOfDrawer);
 
-  TBlockMotionEngine.setEventLog(@BlockMotionEngineLog);
+  if miEnableLogsAnimatedBlocks.Checked then
+    TBlockMotionEngine.setEventLog(@BlockMotionEngineLog)
+  else
+    TBlockMotionEngine.setEventLog(nil);
 
   with FoDrawer do
   begin
@@ -694,6 +787,7 @@ end;
 
 procedure TfrmGame.FormDestroy(Sender: TObject);
 begin
+  FslSavedPoints.Free;
   FoDrawer.setNextDrawer(nil);
   FoLoggerOfDrawer.Free;
   FoDrawer.FoCurrentPlaceBlockCollection.Free;
@@ -701,13 +795,41 @@ begin
   FoDrawer.Free;
 end;
 
-procedure TfrmGame.FormKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
+
+
+function TfrmGame.handleDirectKeysOnPlace(Sender: TObject; var Key: Word;
+  Shift: TShiftState): boolean;
 var
-  cmd: string;
+  keyStr, cmd: string;
+  i: integer;
 begin
+
+  //save points to use in commands as p0 .. p9
+  if (ssCtrl in Shift) and ((Key >= $30) and (Key <= $39)) then
+  begin
+    keyStr := 'p' + char(key);
+    DefineSavedPointsTextValue(keyStr, Format('%d %d %d',
+      [FoDrawer.FnCurrentPlacePositionX, FoDrawer.FnCurrentPlacePositionY,
+      FoDrawer.FnCurrentPlacePositionZ]));
+
+    mmCmd.Lines.Add('Saved positon ' + keyStr + ' => ' +
+      FslSavedPoints.Values[keyStr] + ' (use this in commands like goto...');
+
+    exit;
+  end;
+
+  //go to saved points
+  if (ssShift in Shift) and ((Key >= $30) and (Key <= $39)) then
+  begin
+    keyStr := 'p' + char(key);
+    goToPosition(FslSavedPoints.Values[keyStr]);
+    exit;
+  end;
+
+
   FormKeyDownPlace1(Key, Shift);
 
+  result := true;
   //enter
   if (key = VK_RETURN) or (key = VK_SPACE) then
   begin
@@ -720,12 +842,6 @@ begin
   else if (key = VK_HOME) then
   begin
     goHome;
-  end
-  else if key = VK_C then
-  begin
-    if InputQuery('Command', 'Type a comand ou h por help', cmd) then
-      ExecCmd(cmd);
-
   end
   else if key = VK_H then
   begin
@@ -747,10 +863,26 @@ begin
   begin
     lblOptionsClick(self);
   end
+  else if not handleBlockSelection(key) then
+    result := false;
+
+end;
+
+
+procedure TfrmGame.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var
+  cmd: string;
+begin
+  if key = VK_C then
+  begin
+    if InputQuery('Command', 'Type a comand ou h por help', cmd) then
+      ExecCmd(cmd);
+  end
   else
-    handleBlockSelection(key);
-
-
+  begin
+    handleDirectKeysOnPlace(Sender, Key, Shift);
+  end;
 end;
 
 procedure TfrmGame.imageBackgroungPlace1Click(Sender: TObject);
@@ -826,7 +958,18 @@ end;
 
 procedure TfrmGame.miClearAllClick(Sender: TObject);
 begin
-  FoDrawer.FoCurrentPlaceBlockCollection.deleteAll(@BlockColectionVisitDeleteAll);
+  FoDrawer.FoCurrentPlaceBlockCollection.deleteAll(@BlockColectionVisitDeleteAll, false);
+end;
+
+procedure TfrmGame.miEnableLogsAnimatedBlocksClick(Sender: TObject);
+begin
+  miEnableLogsAnimatedBlocks.Checked := not miEnableLogsAnimatedBlocks.Checked;
+
+  if miEnableLogsAnimatedBlocks.Checked then
+    TBlockMotionEngine.setEventLog(@BlockMotionEngineLog)
+  else
+    TBlockMotionEngine.setEventLog(nil);
+
 end;
 
 procedure TfrmGame.miLoadWorldAtCursorClick(Sender: TObject);
@@ -849,6 +992,17 @@ begin
     MouseNav.LastX := -1;
     MouseNav.LastY := -1;
   end;
+end;
+
+procedure TfrmGame.miSaveAsBlockClick(Sender: TObject);
+var
+  sName: String;
+begin
+  if not inputQuery('Save world as Block', 'Enter the block name:', sName) then
+    exit;
+
+  SaveWorld(sName, true);
+
 end;
 
 
@@ -880,19 +1034,26 @@ begin
   block.Free;
 end;
 
- function TfrmGame.CalculateFullFileNameToSavedWorls(const sName: string): string;
+ function TfrmGame.CalculateFullFileNameToSavedWorls(const sName: string; const block: boolean): string;
 begin
+  if block then
+  begin
+    Result := ExtractFilePath(Application.ExeName) + 'images\blocks\'
+      + sName + ExtractFileExt(C_BLOCK_MODEL_NAME) + C_EXT_METADATA_FILE;
+    exit;
+  end;
   Result := ExtractFilePath(Application.ExeName) + C_SUBFOLDER_WORLDS
-    + sName + '.World.ini';
+    + sName + C_EXT_WORLD_FILE;
 end;
 
 
  procedure TfrmGame.ExecCmd(const cmd: string);
  var
    c: string;
-   sl: TStringList;
+   sl, slSub: TStringList;
    val, dir, x, y, z, i, col, row: integer;
-
+   ss: TShiftState;
+   key: Word;
    procedure posxy(px, py: integer);
    begin
      FoDrawer.FnCurrentPlacePositionX := px;
@@ -919,9 +1080,9 @@ end;
      begin
        posxy(x, y + i);
        try
-       //initMotion(
-       FoDrawer.putNewBlock(imageTargetPlace1hand);
-       //);
+       initMotion(
+         FoDrawer.putNewBlock(imageTargetPlace1hand)
+       );
 
 
        except
@@ -949,9 +1110,9 @@ end;
      begin
        posxy(x + i, y);
        try
-       //initMotion(
-       FoDrawer.putNewBlock(imageTargetPlace1hand);
-       //);
+       initMotion(
+         FoDrawer.putNewBlock(imageTargetPlace1hand)
+       );
        except
          on e: exception do
            mmCmd.Lines.Add('Error executing command: ' + e.message);
@@ -976,6 +1137,7 @@ end;
 
    sl := TStringList.Create;
    sl.Delimiter := ' ';
+   slSub := TStringList.Create;
    try
       while true do
       begin
@@ -985,6 +1147,9 @@ end;
         y := FoDrawer.FnCurrentPlacePositionY;
         z := FoDrawer.FnCurrentPlacePositionZ;
 
+        key := 0;
+        if Length(sl[0]) = 1 then
+          key := Ord(Copy(sl[0], 1, 1)[1]);
         if sl[0] = 'r' then
         begin
           cmdr(StrToIntDef(sl[1], 0));
@@ -1049,18 +1214,97 @@ end;
           posxy(x + col, y - row + 2);
 
         end
-        else
+
+
+        else if (sl[0] = 'goto') and (sl.Count >= 3 ) then
+        begin
+          if sl.Count >= 4  then
+            z := StrToIntDef(sl[3], z);
+
+          goToPosition(format('%s %s %d', [sl[1], sl[2], z]));
+        end
+
+        else if (sl[0] = 'goto') and (sl.Count >= 2 )
+          and ((sl[1] = 'home') or (pos('p', sl[1]) = 1)) then
+        begin
+          slSub.Delimiter := ' ';
+          slSub.DelimitedText := FslSavedPoints.Values[sl[1]];
+          if slSub.Count >= 2 then
+          begin
+            x := StrToIntDef(slSub[0], x);
+            y := StrToIntDef(slSub[1], y);
+            if slSub.Count >= 3  then
+              z := StrToIntDef(slSub[2], z);
+            goToPosition(x, y, z);
+          end;
+        end
+
+        else if ((sl[0] = 'buildup') or (sl[0] = 'bu')) and (sl.Count = 1 ) then
+        begin
+          //up the block at same x and y, but z - 1
+          x := FoDrawer.FnCurrentPlacePositionX;
+          y := FoDrawer.FnCurrentPlacePositionY;
+          z := FoDrawer.FnCurrentPlacePositionZ - 1;
+          executeCommandBuildUp(1, format('%d %d %d', [x, y, z]),
+            format('%d %d %d', [x, y + 50, z]), false);
+        end
+
+
+        else if ((sl[0] = 'buildup') or (sl[0] = 'bu')) and (sl.Count >= 3 )
+          and ((sl[1] = 'home') or (pos('p', sl[1]) = 1))
+          and (pos('p', sl[2]) = 1) then
+        begin
+
+          if (sl.Count >= 4) and (sl[3] = 'noupdate') then
+            executeCommandBuildUp(1, sl[1], sl[2], false)
+          else
+            executeCommandBuildUp(1, sl[1], sl[2], true);
+        end
+
+        else if ( (sl.Count <> 1) or (key = 0) or (not handleDirectKeysOnPlace(self, key, ss)) ) then
           ShowMessage('Invalid Command.');
 
         if not InputQuery('Comamnd', 'enter a new command', c) then
           exit;
       end;
    finally
+     slSub.Free;
      sl.Free;
    end;
 
  end;
 
+
+procedure TfrmGame.SaveWorld(const sName: string; const block: boolean);
+var
+  s, img: string;
+begin
+
+    FoCurrentSavingObjectCount := 0;
+  s := CalculateFullFileNameToSavedWorls(sName, block);
+  FoCurrentSavingFile := TIniFile.Create(s);
+  FoCurrentBlockNameDictionary := TStringList.Create;
+  try
+    FoDrawer.FoCurrentPlaceBlockCollection.visitAll(@BlockColectionVisitEventSalveToFile);
+    FoCurrentSavingFile.WriteInteger('count', 'object', FoCurrentSavingObjectCount);
+    FsAutoSaveName := sName;
+
+    if not  block then
+      exit;
+
+    img := ExtractFileExt(C_BLOCK_MODEL_NAME);
+    img := StringReplace(s, C_EXT_METADATA_FILE, '', []);
+
+    s := ExtractFilePath(Application.ExeName) + C_SUBFOLDER_IMAGES + C_BLOCK_MODEL_NAME;
+    CopyFile(s, img);
+
+    ShellExecute(0,nil, PChar('cmd'),PChar('/c "C:\Windows\system32\mspaint.exe" "' + img + '"'),nil,0);
+  finally
+    FoCurrentBlockNameDictionary.Free;
+    FoCurrentSavingFile.Free;
+  end;
+
+end;
 
 procedure TfrmGame.miSaveWorldClick(Sender: TObject);
 var
@@ -1068,19 +1312,13 @@ var
 begin
   if not inputQuery('Save world', 'Enter the world name:', sName) then
     exit;
-  FoCurrentSavingObjectCount := 0;
-  FoCurrentSavingFile := TIniFile.Create(CalculateFullFileNameToSavedWorls(sName));
-  FoCurrentBlockNameDictionary := TStringList.Create;
-  try
-    FoDrawer.FoCurrentPlaceBlockCollection.visitAll(@BlockColectionVisitEventSalveToFile);
-    FoCurrentSavingFile.WriteInteger('count', 'object', FoCurrentSavingObjectCount);
 
-  finally
-    FoCurrentBlockNameDictionary.Free;
-    FoCurrentSavingFile.Free;
-  end;
+  SaveWorld(sName);
+end;
 
-
+procedure TfrmGame.miShowLastErrorsFromMotionBlockClick(Sender: TObject);
+begin
+  openLastErrorLastBlock;
 end;
 
 procedure TfrmGame.mmCmdChange(Sender: TObject);
@@ -1190,6 +1428,19 @@ begin
   InitTimeLimit;
 end;
 
+procedure TfrmGame.TimerAutoSaveTimer(Sender: TObject);
+begin
+  if FsAutoSaveName = '' then
+    FsAutoSaveName := 'AutoSavedLastWorls' + C_EXT_WORLD_FILE;
+  statusMessage('autoSaveStart', 'Auto saving world...');
+  DeleteFile(FsAutoSaveName);
+  try
+    SaveWorld(FsAutoSaveName);
+  finally
+    statusMessage('autoSaveStart', 'Auto saving world...Done');
+  end;
+end;
+
 procedure TfrmGame.TimerLimitTimer(Sender: TObject);
 begin
   if FnTimeRemail > 0 then
@@ -1208,21 +1459,18 @@ begin
   end;
 end;
 
+
 procedure TfrmGame.goHome;
 begin
   goToPosition(0, 0, 0);
 end;
 
-procedure TfrmGame.loadWorldAtCursor(const xini, yini, zini: integer);
+procedure TfrmGame.loadWorldFromFileAtCursor(const sName: string; const xini, yini, zini: integer);
 var
-  sName, sImageName, sObject: string;
+  sImageName, sObject: string;
   i, x, y, z, index, imageIndex, blockCount, objectCount: integer;
   sl: TStringList;
 begin
-  if not TfrmLoadWorld.Execute(sName) then
-    exit;
-
-  sName := ExtractFilePath(Application.ExeName) + C_SUBFOLDER_WORLDS + sName;
 
   if not FileExists(sName) then
     raise Exception.CreateFmt('File not exists: %s', [sName]);
@@ -1267,7 +1515,7 @@ begin
           FoDrawer.putNewBlock(imageTargetPlace1hand);
         except
           on E:Exception do
-            mmCmd.Lines.Add('log: Error putting new block on load world context: '
+            mmCmd.Lines.Add('log: Error putting new block on load world or metadata context: '
               + E.Message);
         end;
       end;
@@ -1282,6 +1530,21 @@ begin
 
 end;
 
+
+procedure TfrmGame.loadWorldAtCursor(const xini, yini, zini: integer);
+var
+  sName: string;
+begin
+  if not TfrmPreviewOpenFile.Execute(FoDrawer, sName) then
+    exit;
+
+  sName := ExtractFilePath(Application.ExeName) + C_SUBFOLDER_WORLDS + sName;
+
+  loadWorldFromFileAtCursor(sName, xini, yini, zini);
+
+
+end;
+
 procedure TfrmGame.goToPosition(const x, y, z: integer);
 begin
   FoDrawer.FnCurrentPlacePositionX := x;
@@ -1289,6 +1552,41 @@ begin
   FoDrawer.FnCurrentPlacePositionZ := z;
   updateTargetImagePosition;
   FoLastMoveKind := makMove;
+end;
+
+procedure TfrmGame.goToPosition(const pointStr: string);
+var
+  sl: TStringList;
+  x, y, z: integer;
+begin
+  sl := TStringList.Create;
+  try
+    sl.Delimiter := ' ';
+    sl.DelimitedText := pointStr;
+    if sl.Count >= 2 then
+    begin
+      x := StrToIntDef(sl[0], FoDrawer.FnCurrentPlacePositionX);
+      y := StrToIntDef(sl[1], FoDrawer.FnCurrentPlacePositionY);
+      if sl.Count >= 3  then
+        z := StrToIntDef(sl[2], FoDrawer.FnCurrentPlacePositionZ);
+      goToPosition(x, y, z);
+
+    end;
+  finally
+    sl.Free;
+  end
+end;
+
+procedure TfrmGame.DefineSavedPointsTextValue(const key, value: string);
+var
+  i: integer;
+begin
+  FslSavedPoints.Values[key] := value;
+
+  lblSavedPoints.Caption := 'Saved points: ' + #13;
+  for i := 0 to FslSavedPoints.Count - 1 do
+    lblSavedPoints.Caption := lblSavedPoints.Caption + ' - ' + FslSavedPoints[i] + #13;
+
 end;
 
 procedure TfrmGame.BlockMotionEngineMove(Sender: TMotionBlockControl; const x,
@@ -1345,7 +1643,12 @@ end;
 
 procedure TfrmGame.BlockMotionEngineMoveBlock(Sender: TMotionBlockControl;
   const x, y, z: integer; const effect: String);
+var
+  prevX, prevY, prevZ: integer;
 begin
+  prevX := FoDrawer.FnCurrentPlacePositionX;
+  prevY := FoDrawer.FnCurrentPlacePositionY;
+  prevZ := FoDrawer.FnCurrentPlacePositionZ;
 
   FoDrawer.FnCurrentPlacePositionX := x;
   FoDrawer.FnCurrentPlacePositionY := y;
@@ -1358,6 +1661,9 @@ begin
   Sender.FnCurrentZ:= FoDrawer.FnCurrentPlacePositionZ;
 
   FoDrawer.moveBlock(Sender.FoBlock, effect);
+
+  TBlockMotionEngine.notifyBlockMove(Sender.FoBlock, Sender.FnCurrentX, Sender.FnCurrentY,
+    Sender.FnCurrentZ, prevX, prevY, prevZ);
 end;
 
 procedure TfrmGame.BlockMotionEngineMoveBlockWithOutCursor(
@@ -1367,10 +1673,86 @@ begin
 
   FoDrawer.moveBlockToWithoutCursor(Sender.FoBlock, x, y, z, effect);
 
+  //the animated block have your own control of position. Is this a good idea?
   Sender.FnCurrentX:= x;
   Sender.FnCurrentY:= y;
   Sender.FnCurrentZ:= z;
 
+end;
+
+procedure TfrmGame.executeCommandBuildUp(const offset: integer; const p0,
+  p1: string; const updateSavedPoints: boolean);
+var
+  sl0, sl1: TStringList;
+  x, y, z, minX, maxX, minY, maxY, minZ, maxZ: integer;
+  block: TBlock;
+begin
+  sl0 := TStringList.Create;
+  sl0.Delimiter := ' ';
+  sl1 := TStringList.Create;
+  sl1.Delimiter := ' ';
+  try
+    try
+      if Pos(' ', p0) > 1 then
+        sl0.DelimitedText := p0
+      else
+      begin
+        sl0.DelimitedText := FslSavedPoints.Values[p0];
+        if (sl0.count = 3) and updateSavedPoints then
+          DefineSavedPointsTextValue(p0, Format('%s %d %s', [sl0[0],
+            StrToInt(sl0[1])+ offset, sl0[2]]));
+
+      end;
+
+      if Pos(' ', p1) > 1 then
+        sl1.DelimitedText := p1
+      else
+      begin
+        sl1.DelimitedText := FslSavedPoints.Values[p1];
+        if (sl1.count = 3) and updateSavedPoints then
+          DefineSavedPointsTextValue(p1, Format('%s %d %s', [sl1[0],
+            StrToInt(sl1[1])+ offset, sl1[2]]));
+
+
+    end;
+
+
+      if (sl0.Count + sl1.Count) < 6 then
+        exit;
+
+      minX := min(StrToInt(sl0[0]), StrToInt(sl1[0]));
+      maxX := max(StrToInt(sl0[0]), StrToInt(sl1[0]));
+
+      minY := min(StrToInt(sl0[1]), StrToInt(sl1[1]));
+      maxY := max(StrToInt(sl0[1]), StrToInt(sl1[1]));
+
+      minZ := min(StrToInt(sl0[2]), StrToInt(sl1[2]));
+      maxZ := max(StrToInt(sl0[2]), StrToInt(sl1[2]));
+
+      for z := maxZ downto minZ do
+        for y := maxY downto minY do
+          for x := minX to maxX do
+          begin
+            //move block offset up (without check if exist a block, for simplicity efect)
+
+            block := FoDrawer.FoCurrentPlaceBlockCollection.find(x, y, z);
+            if block <> nil then
+            begin
+              FoDrawer.moveBlockToWithoutCursor(block, x, y + offset, z, '');
+
+              //if this is a animated block?
+
+
+            end;
+          end;
+    except
+      on E: Exception do
+        mmCmd.Lines.Add('Erro on build up command: ' + e.Message);
+    end;
+  finally
+    sl0.Free;
+    sl1.Free;
+  end;
 end;
 
 end.

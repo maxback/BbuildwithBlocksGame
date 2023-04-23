@@ -41,6 +41,9 @@ end;
 var
   i, r, id, cx, x, cy, y, cz, z, blockid: integer;
   count, radio: integer;
+  decide: boolean;
+  direction: integer;
+  maxSteps: integer;
 begin
   id := born;
   
@@ -56,16 +59,77 @@ begin
   
   log(id, 'Hello!! I am a moster (1)...');
 
+  maxSteps := 40;
+  decide := true;
   while true do
   begin
 	  
-	  case Random(3) of
-    	  0:  if not haveBlock(id, cx - 1, cy, cz) then begin log(id, 'moving to left');  cx := cx - 1; moveBlock(id, cx, cy, cz, 'jump'); end;
-    	  1:  if not haveBlock(id, cx + 1, cy, cz) then begin log(id, 'moving to Right'); cx := cx + 1; moveBlock(id, cx, cy, cz, 'jump'); end;
-    	  2:  if not haveBlock(id, cx, cy - 1, cz) then begin log(id, 'moving to down');  cy := cy - 1; moveBlock(id, cx, cy, cz, 'jump'); end;
-    	  3:  if not haveBlock(id, cx, cy + 1, cz) then begin log(id, 'moving to up');    cy := cy - 1; moveBlock(id, cx, cy, cz, 'jump'); end;
-	  end;
+	if decide then
+	begin
+		decide := false;
+		direction := Random(4);
+		maxSteps := Random(10);
+	end;
+
+	case direction of
+		0:  //esquerda
+		  if not haveBlock(id, cx - 1, cy, cz) then 
+		  begin
+		    log(id, 'moving to left');  
+			
+			cx := cx - 1; 
+			moveBlock(id, cx, cy, cz, 'jump'); 
+			Dec(maxSteps); 
+		  end else begin 
+		    log(id, 'obstacle at left');
+		    decide := true; 
+		  end;
+		1:  //direita
+		  if not haveBlock(id, cx + 1, cy, cz) then 
+		  begin 
+		    log(id, 'moving to Right'); 
+			
+			cx := cx + 1; 
+			moveBlock(id, cx, cy, cz, 'jump'); 
+			Dec(maxSteps);  
+		  end else begin 
+		    log(id, 'obstacle at RIGNT');
+		    decide := true; 
+		  end;
+		2: // baixo  
+		  if not haveBlock(id, cx, cy - 1, cz) then 
+		  begin 
+		    log(id, 'moving to down');  
+			
+			cy := cy - 1; 
+			moveBlock(id, cx, cy, cz, 'jump'); 
+			Dec(maxSteps);  
+		  end else begin 
+		    log(id, 'obstacle at down');
+		  
+		    decide := true; 
+		  end;
+		3: //cima  
+		  if not haveBlock(id, cx, cy + 1, cz) then 
+		  begin 
+		    log(id, 'moving to up');    
+			
+			cy := cy + 1; 
+			moveBlock(id, cx, cy, cz, 'jump'); 
+			Dec(maxSteps);  
+		  end else begin 
+ 		    log(id, 'obstacle at up');
+
+		    decide := true; 
+		  end;
+	end;
 	
-        sleep(id, 1000);
+	if maxSteps <= 0 then
+	  decide := true;
+
+	if decide then
+		sleep(id, 20)
+	else
+		sleep(id, 1000);
   end;  
 end.

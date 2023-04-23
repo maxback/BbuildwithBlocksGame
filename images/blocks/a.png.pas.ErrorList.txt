@@ -1,2 +1,0 @@
-Error inserting motion block with script C:\git\BbuildwithBlocksGame\images\blocks\a.png.pas. count: 1
-[Hint] (30:3): Variable 'BLOCKID' never used

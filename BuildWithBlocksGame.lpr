@@ -12,7 +12,7 @@ uses
   Interfaces, // this includes the LCL widgetset
   Forms, umain, uInventory, utypes, uAbstractDrawer, uControlConfig, 
   uBlockColection, uloggerofdrawer, uBlockMotionEngine, pascalscript, 
-uloadworls, ucmdhelp;
+uloadworls, ucmdhelp, uCanvasDrawer, uPreviewOpenFile;
 
 {$R *.res}
 

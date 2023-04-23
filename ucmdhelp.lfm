@@ -1,31 +1,47 @@
 object frmCmdHelp: TfrmCmdHelp
   Left = 235
-  Height = 384
+  Height = 265
   Top = 31
-  Width = 524
+  Width = 884
   BorderStyle = bsToolWindow
   Caption = 'Commands Help'
-  ClientHeight = 384
-  ClientWidth = 524
+  ClientHeight = 265
+  ClientWidth = 884
   FormStyle = fsStayOnTop
   OnCloseQuery = FormCloseQuery
   Position = poMainFormCenter
   LCLVersion = '2.2.4.0'
   object Memo1: TMemo
     Left = 0
-    Height = 384
+    Height = 265
     Top = 0
-    Width = 524
+    Width = 884
     Align = alClient
     Color = clBtnFace
+    Font.CharSet = ANSI_CHARSET
+    Font.Name = 'Fixedsys'
+    Font.Pitch = fpFixed
+    Font.Quality = fqDraft
     Lines.Strings = (
       'List of commands:'
       '  r <length> - put a row with <lenght> blocks by position to right (e.g.: r 10);'
       '  c <lenght> - put a column with <lenght> blocks by position to up (e.g.: c 10);'
       '  rec <columns> <rows> [fill] - put a rect of <columns> blocks in columns and <rows>'
-      '    blocks in rowns. if "fill" present the rectangle will be filled (e.g.: rec 10 10  and rec 10 10 fill).'
+      '                                blocks in rowns. if "fill" present the rectangle will be filled '
+      '                                (e.g.: rec 10 10  and rec 10 10 fill).'
+      '0 to 9 - Select a block'
+      'i      - call then Inventary'
+      'goto <x> <y> [<z>] - Go cursor to x, y, z coordinates. Z is optional.'
+      'goto <point>       - point = p0, p1, .. p9 (saved with ctrl + 0, ..) or = home'
+      ''
+      'buildup                              - move blocks up begining with the same x and y of cursor and z - 1'
+      'buildup <point1> <point2> [noupdate] - move blocks up in a rectangle define by two points and '
+      '                                       update the position of points to up too (except if a parameter noupdate has defined) '
+      '                                       (this blocks has previus saved with ctrl 0.. ctrl+9).'
     )
+    ParentFont = False
     ReadOnly = True
+    ScrollBars = ssBoth
     TabOrder = 0
   end
 end

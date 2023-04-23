@@ -13,7 +13,16 @@ type
 
   { TAbstractDrawer }
 
+  CanNotDrawBlockNoSelectedException = class(Exception);
+
+  CanNotDrawAreadyExistABlockException = class(Exception);
+
   TAbstractDrawer = class
+  private
+    FnZoom: integer;
+  protected
+    procedure SetZoom(AValue: integer); virtual;
+
   public
     FnCurrentPlaceOffsetX: integer;
     FnCurrentPlaceOffsetY: integer;
@@ -40,6 +49,10 @@ type
 
     procedure updateTargetImagePosition; virtual;
 
+    procedure setSelectedBlockIndex(const SelectedBlockIndex: integer);
+
+    procedure loadBlockSourceFileNamesFrom(const arrInput: array of string); virtual;
+
     function putNewBlock(imageTargetPlace1hand: TImage): TBlock; virtual;
     procedure pickBlock; virtual;
 
@@ -49,6 +62,23 @@ type
       const effect: string); virtual;
 
     procedure setNextDrawer(drawer: TAbstractDrawer);
+
+    procedure SetCurrentPlacePositionX(const value: integer); virtual;
+    procedure SetCurrentPlacePositionY(const value: integer); virtual;
+    procedure SetCurrentPlacePositionZ(const value: integer); virtual;
+
+
+    property CurrentPlacePositionX: integer read FnCurrentPlacePositionX
+      write SetCurrentPlacePositionX;
+
+    property CurrentPlacePositionY: integer read FnCurrentPlacePositionY
+      write SetCurrentPlacePositionY;
+
+    property CurrentPlacePositionZ: integer read FnCurrentPlacePositionZ
+      write SetCurrentPlacePositionZ;
+
+    property Zoom: integer read FnZoom write SetZoom;
+
 
   end;
 
@@ -76,6 +106,35 @@ begin
 
   if Assigned(FoNextDrawer) then
     FoNextDrawer.updateTargetImagePosition;
+
+end;
+
+procedure TAbstractDrawer.SetZoom(AValue: integer);
+begin
+  if FnZoom = AValue then Exit;
+  FnZoom := AValue;
+
+  if Assigned(FoNextDrawer) then
+    FoNextDrawer.SetZoom(AValue);
+end;
+
+procedure TAbstractDrawer.setSelectedBlockIndex(
+  const SelectedBlockIndex: integer);
+begin
+  FnSelectedBlockIndex := SelectedBlockIndex;
+  if Assigned(FoNextDrawer) then
+    FoNextDrawer.setSelectedBlockIndex(SelectedBlockIndex);
+
+end;
+
+procedure TAbstractDrawer.loadBlockSourceFileNamesFrom(
+  const arrInput: array of string);
+var
+  i: integer;
+begin
+  SetLength(FBlockSourceFilenames, Length(arrInput));
+  for i := 0 to High(arrInput) do
+    FBlockSourceFilenames[i] := arrInput[i];
 
 end;
 
@@ -154,6 +213,7 @@ begin
     if FnCurrentPlacePositionZ < 0 then
       FnCurrentPlacePositionZ := 0;
 
+     block.Free;
   end;
 
   if Assigned(FoNextDrawer) then
@@ -194,6 +254,13 @@ begin
   block.FoImage.Height := FoCurrentPlaceImageTarget.Height;
   block.FoImage.Width := FoCurrentPlaceImageTarget.Width;
 
+  FoCurrentPlaceBlockCollection.remove(block);
+
+  block.FnX := x;
+  block.FnY := y;
+  block.FnZ := z;
+
+  FoCurrentPlaceBlockCollection.add(block);
 
   if Assigned(FoNextDrawer) then
     FoNextDrawer.moveBlockToWithoutCursor(block, x, y, z, effect);
@@ -203,6 +270,28 @@ procedure TAbstractDrawer.setNextDrawer(drawer: TAbstractDrawer);
 begin
   FoNextDrawer := drawer;
   FoNextDrawer.FoPrevDrawer := self;
+end;
+
+procedure TAbstractDrawer.SetCurrentPlacePositionX(const value: integer);
+begin
+  FnCurrentPlacePositionX := value;
+  if Assigned(FoNextDrawer) then
+    FoNextDrawer.SetCurrentPlacePositionX(value);
+end;
+
+procedure TAbstractDrawer.SetCurrentPlacePositionY(const value: integer);
+begin
+  FnCurrentPlacePositionY := value;
+  if Assigned(FoNextDrawer) then
+    FoNextDrawer.SetCurrentPlacePositionY(value);
+end;
+
+procedure TAbstractDrawer.SetCurrentPlacePositionZ(const value: integer);
+begin
+  FnCurrentPlacePositionZ := value;
+  if Assigned(FoNextDrawer) then
+    FoNextDrawer.SetCurrentPlacePositionZ(value);
+
 end;
 
 end.

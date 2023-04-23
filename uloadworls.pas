@@ -24,6 +24,7 @@ type
       Change: TItemChange);
   private
 
+
   public
     FsName: string;
     class function Execute(var sName: string): boolean;
@@ -62,6 +63,7 @@ begin
 
   FsName := lvWorlds.Selected.Caption;
 end;
+
 
 procedure TfrmLoadWorld.btnOkClick(Sender: TObject);
 begin

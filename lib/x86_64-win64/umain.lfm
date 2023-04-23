@@ -360,6 +360,17 @@ object frmGame: TfrmGame
         Stretch = True
         Transparent = True
       end
+      object lblSavedPoints: TLabel
+        Left = 832
+        Height = 262
+        Top = 10
+        Width = 102
+        Anchors = [akTop, akRight]
+        AutoSize = False
+        Caption = 'Saved points:'
+        ParentColor = False
+        WordWrap = True
+      end
     end
   end
   object StatusBar: TStatusBar
@@ -780,12 +791,14 @@ object frmGame: TfrmGame
     Top = 66
     Width = 954
     Align = alTop
-    Caption = '           h                  p                                        0                 1                  2                 3                  4                  5                  6                  7                8                   9       . ou ''o'' to menu, home, i,  and (z or ctrl +z) to move. c => command'
+    Caption = '           h                  p                                        0                 1                  2                 3                  4                  5                  6                  7                8                   9       . ou ''o'' to menu, home, i,  and (z or ctrl +z), [ctrl + 0 ... 9] to save p0..p9 points and . c => command'
     Font.CharSet = ANSI_CHARSET
     Font.Pitch = fpVariable
     Font.Quality = fqDraft
     ParentColor = False
     ParentFont = False
+    ParentShowHint = False
+    ShowHint = True
     OnClick = lblShortCutsClick
   end
   object pnlSelectedBlock: TPanel
@@ -1180,12 +1193,15 @@ object frmGame: TfrmGame
     Top = 400
     object miMoveByMouse: TMenuItem
       Caption = '&Use mouse to move hand or pick'
-      Checked = True
       OnClick = miMoveByMouseClick
     end
     object miSaveWorld: TMenuItem
       Caption = '&Save World...'
       OnClick = miSaveWorldClick
+    end
+    object miSaveAsBlock: TMenuItem
+      Caption = 'Save World as Block... '
+      OnClick = miSaveAsBlockClick
     end
     object miLoadWorld: TMenuItem
       Caption = '&Load World...'
@@ -1202,5 +1218,22 @@ object frmGame: TfrmGame
       Caption = 'Load World &At Cursor...'
       OnClick = miLoadWorldAtCursorClick
     end
+    object miShowLastErrorsFromMotionBlock: TMenuItem
+      Caption = 'Show Last &Errors From Motion Block'
+      OnClick = miShowLastErrorsFromMotionBlockClick
+    end
+    object miEnableLogsAnimatedBlocks: TMenuItem
+      Caption = 'Enable log of animated blocks'
+      OnClick = miEnableLogsAnimatedBlocksClick
+    end
+    object midiv: TMenuItem
+      Caption = '-'
+    end
+  end
+  object TimerAutoSave: TTimer
+    Interval = 30000
+    OnTimer = TimerAutoSaveTimer
+    Left = 149
+    Top = 96
   end
 end
