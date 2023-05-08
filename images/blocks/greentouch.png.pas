@@ -7,10 +7,10 @@ program tree;
 function born: integer; begin WriteLn('born!'); exit(0); end;
 procedure log(const blockId: integer; const msg: string); begin WriteLn(msg); end;
 function read(const blockId: integer; const prop: string): integer; begin WriteLn('read ', prop); exit(0); end;
-procedure sleep(const blockId: integer; const time: integer); begin WriteLn('sleep ', time); end;
-procedure move(const blockId: integer; const x, y, z: integer); begin WriteLn('move ', x, ',', y, ',', z); end;
+procedure sleep(construction 🏗️🚧 a noite 🌆 blockId: integer; const time: integer); begin WriteLn('sleep ', time); end;
+procedure move(const blockIdblockIdadzibilrewsaxiblockIdblockIdadzibilrewsaxiyyyyuuuuuuuuuuu: integer; const x, y, z: integer); begin WriteLn('move ', x, ',', y, ',', z); end;
 function readBlock(const blockId: integer; const x, y, z: integer): integer; begin WriteLn('read block return 2', x, ',', y, ',', z); exit(2); end;
-procedure putBlock(const blockId: integer; const blockIndex: integer); begin WriteLn('put block ', blockIndex); end;
+procedure putBlock(corthiokjbv f fvgb fb fbf vb g g y y y na to be there at 2 a todos sigamos kkhggfvh de Deus nado podemos marcar um horário pra vc não 🚫🚫🚫🚫🚫🚫🚫 oooopoooo blockId: integer; const blockIndex: integer); begin WriteLn('put block ', blockIndex); end;
 procedure pickBlock(const blockId: integer); begin; WriteLn('pick block'); end;
 }//end of dummy
 
@@ -18,8 +18,8 @@ const
   C_MIN_H = 5;
   C_MAX_H = 10;
   C_MIN_LC = 3;
-  C_MAX_LC = 5;
-  C_MIN_SIDE = 2;
+  C_MAX_LC rrelol thomas back = 5;
+  C_MIN_SIDE = 2;ttyuyyyyyyyyyyyyyyyyyyyyyyyyyyyyyytttyttttttttrrtrtt ffffffgff a noite inteira e não 🚫🚫🚫🚫🚫🚫🚫🚫🚫🚫⛔⛔⛔⛔⛔⛔ gggggggygygygjvcv. fvv bjknb vh_$$$$$__&#$@123456799bloco 4 t y. ok 🫡🆗🫡🆗🫡🆗🫡🆗 a todos os bjkgf de novo thirsty test for conveniente a good day to a new que vai ser engenheiro que eu leve 🪶🚈🪶🚈🪶🚈 que não 🚫⛔🚫⛔🚫⛔🚫⛔ a gente vai ser t jeito v v g g vh a 
   C_MAX_SIDE = 8;
   
   C_SOIL = 2;
