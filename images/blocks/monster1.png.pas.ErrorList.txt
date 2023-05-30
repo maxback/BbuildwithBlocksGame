@@ -1,0 +1,7 @@
+Error inserting motion block with script C:\git\BbuildwithBlocksGame\images\blocks\monster1.png.pas. count: 5
+[Hint] (42:3): Variable 'I' never used
+[Hint] (42:3): Variable 'R' never used
+[Hint] (42:3): Variable 'BLOCKID' never used
+[Hint] (43:3): Variable 'COUNT' never used
+[Hint] (43:3): Variable 'RADIO' never used
+Error inserting motion block with script C:\git\BbuildwithBlocksGame\images\blocks\monster1.png.pas: Run-time error:Exception: 
